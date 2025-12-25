@@ -1,0 +1,442 @@
+openapi: 3.0.3
+info:
+  title: PostShare Authentication API
+  description: API for user authentication, including email/password and OAuth (Google, GitHub)
+  version: 1.0.0
+  contact:
+    name: PostShare Team
+
+servers:
+  - url: https://{domain}/api
+    description: Vercel deployment
+    variables:
+      domain:
+        default: localhost:3000
+        description: Deployment domain
+  - url: http://localhost:3000/api
+    description: Local development
+
+tags:
+  - name: authentication
+    description: User registration and login operations
+
+paths:
+  /auth/signup:
+    post:
+      tags:
+        - authentication
+      summary: Register new user (email/password)
+      description: Create a new user account with email and password
+      operationId: signup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - username
+                - displayName
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: "SecurePass123!"
+                username:
+                  type: string
+                  pattern: "^[a-zA-Z0-9_-]{3,20}$"
+                  example: "johndoe"
+                displayName:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                  example: "John Doe"
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          description: Email or username already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: 'Email already in use'
+                code: 'DUPLICATE_EMAIL'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /auth/login:
+    post:
+      tags:
+        - authentication
+      summary: Login with email/password
+      description: Authenticate user and return JWT tokens
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  format: password
+                  example: "SecurePass123!"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: 'Invalid email or password'
+                code: 'INVALID_CREDENTIALS'
+        '429':
+          description: Too many login attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: 'Too many login attempts. Please try again in 15 minutes.'
+                code: 'RATE_LIMIT_EXCEEDED'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /auth/oauth/google:
+    get:
+      tags:
+        - authentication
+      summary: Initiate Google OAuth flow
+      description: Redirects user to Google OAuth consent screen
+      operationId: initiateGoogleOAuth
+      responses:
+        '302':
+          description: Redirect to Google OAuth
+          headers:
+            Location:
+              schema:
+                type: string
+                example: "https://accounts.google.com/o/oauth2/v2/auth?client_id=...&redirect_uri=..."
+
+  /auth/oauth/google/callback:
+    get:
+      tags:
+        - authentication
+      summary: Google OAuth callback
+      description: Handles Google OAuth redirect, exchanges code for tokens, creates/updates user
+      operationId: googleOAuthCallback
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Authorization code from Google
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+          description: CSRF protection state parameter
+      responses:
+        '302':
+          description: Redirect to app with JWT token
+          headers:
+            Location:
+              schema:
+                type: string
+                example: "https://app.vercel.app/?token=eyJhbGciOi..."
+            Set-Cookie:
+              schema:
+                type: string
+                example: "refreshToken=...; HttpOnly; Secure; SameSite=Strict; Max-Age=604800"
+        '400':
+          description: Invalid authorization code or state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /auth/oauth/github:
+    get:
+      tags:
+        - authentication
+      summary: Initiate GitHub OAuth flow
+      description: Redirects user to GitHub OAuth authorization screen
+      operationId: initiateGitHubOAuth
+      responses:
+        '302':
+          description: Redirect to GitHub OAuth
+          headers:
+            Location:
+              schema:
+                type: string
+                example: "https://github.com/login/oauth/authorize?client_id=...&redirect_uri=..."
+
+  /auth/oauth/github/callback:
+    get:
+      tags:
+        - authentication
+      summary: GitHub OAuth callback
+      description: Handles GitHub OAuth redirect, exchanges code for tokens, creates/updates user
+      operationId: gitHubOAuthCallback
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Authorization code from GitHub
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+          description: CSRF protection state parameter
+      responses:
+        '302':
+          description: Redirect to app with JWT token
+          headers:
+            Location:
+              schema:
+                type: string
+                example: "https://app.vercel.app/?token=eyJhbGciOi..."
+            Set-Cookie:
+              schema:
+                type: string
+                example: "refreshToken=...; HttpOnly; Secure; SameSite=Strict; Max-Age=604800"
+        '400':
+          description: Invalid authorization code or state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /auth/refresh:
+    post:
+      tags:
+        - authentication
+      summary: Refresh access token
+      description: Exchange refresh token for new access token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  description: Refresh token (from httpOnly cookie or request body)
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: New access token generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  expiresIn:
+                    type: integer
+                    description: Token expiry in seconds
+                    example: 1800
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: 'Invalid refresh token'
+                code: 'INVALID_REFRESH_TOKEN'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /auth/logout:
+    post:
+      tags:
+        - authentication
+      summary: Logout user
+      description: Invalidate refresh token (if using sessions collection)
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Logged out successfully"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+components:
+  schemas:
+    AuthResponse:
+      type: object
+      required:
+        - accessToken
+        - refreshToken
+        - user
+        - expiresIn
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token (short-lived, 30 min)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          description: Refresh token (long-lived, 7 days)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        expiresIn:
+          type: integer
+          description: Access token expiry in seconds
+          example: 1800
+        user:
+          $ref: '#/components/schemas/UserProfile'
+
+    UserProfile:
+      type: object
+      required:
+        - _id
+        - email
+        - username
+        - displayName
+        - createdAt
+      properties:
+        _id:
+          type: string
+          example: "676c2f9a8e7b12a3c4d5e6f9"
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        username:
+          type: string
+          example: "johndoe"
+        displayName:
+          type: string
+          example: "John Doe"
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://res.cloudinary.com/demo/image/upload/v1234567890/postshare/avatars/user123.jpg"
+        followerCount:
+          type: integer
+          example: 25
+        followingCount:
+          type: integer
+          example: 42
+        postCount:
+          type: integer
+          example: 15
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-12-25T09:00:00.000Z"
+
+    Error:
+      type: object
+      required:
+        - error
+        - code
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+        code:
+          type: string
+          description: Machine-readable error code
+        details:
+          type: object
+          description: Additional error context (optional)
+
+  responses:
+    ValidationError:
+      description: Invalid request data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: 'Validation failed'
+            code: 'VALIDATION_ERROR'
+            details:
+              email: 'Invalid email format'
+              password: 'Password must be at least 8 characters'
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: 'Authentication required'
+            code: 'UNAUTHORIZED'
+
+    ServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: 'An unexpected error occurred'
+            code: 'INTERNAL_ERROR'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from /auth/login or /auth/signup
