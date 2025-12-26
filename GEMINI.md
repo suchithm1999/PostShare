@@ -35,7 +35,6 @@ JavaScript (React 18+): Follow standard conventions
 ## Recent Changes
 - 008-mobile-ux-polish: Added JavaScript (React 18+, Node.js 18+)
 - 007-follow-requests: Added JavaScript (React 18+), Node.js 18+ (Vercel serverless runtime) + React, React Router, MongoDB (database), Vercel (hosting), lucide-react (icons)
-- 006-vercel-db-storage: Added JavaScript (React 18+), Node.js 18+ (Vercel serverless runtime)
 
 
 <!-- MANUAL ADDITIONS START -->
