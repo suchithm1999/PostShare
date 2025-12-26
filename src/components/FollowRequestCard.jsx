@@ -26,7 +26,7 @@ export default function FollowRequestCard({
     const timeAgo = getTimeAgo(new Date(request.createdAt));
 
     return (
-        <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-600 transition-colors">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-600 transition-colors">
             {/* User Info */}
             <div className="flex items-center gap-3">
                 <UserAvatar
@@ -50,11 +50,11 @@ export default function FollowRequestCard({
 
             {/* Actions */}
             {variant === 'incoming' ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
                     <button
                         onClick={() => onAccept?.(request._id)}
                         disabled={loading}
-                        className="inline-flex items-center gap-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Accept follow request"
                     >
                         <Check size={18} />
@@ -63,7 +63,7 @@ export default function FollowRequestCard({
                     <button
                         onClick={() => onDecline?.(request._id)}
                         disabled={loading}
-                        className="inline-flex items-center gap-1 px-4 py-2 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-4 py-2 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Decline follow request"
                     >
                         <X size={18} />
@@ -71,8 +71,8 @@ export default function FollowRequestCard({
                     </button>
                 </div>
             ) : (
-                <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500 dark:text-gray-400 mr-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
                         Pending
                     </span>
                     <button

@@ -1,5 +1,5 @@
 import { getCollection } from '../../lib/mongodb.js';
-import { verifyToken, generateAccessToken } from '../../lib/auth.js';
+import { verifyToken, generateAccessToken, generateRefreshToken } from '../../lib/auth.js';
 import { Errors, sendError, sendSuccess } from '../../lib/errors.js';
 import { ObjectId } from 'mongodb';
 
@@ -45,15 +45,20 @@ export default async function handler(req, res) {
             return sendError(res, Errors.unauthorized('User not found', 'USER_NOT_FOUND'));
         }
 
-        // Generate new access token (keep same refresh token)
+        // Generate new tokens (rotate refresh token for security)
         const newAccessToken = generateAccessToken({
             userId: user._id.toString(),
             email: user.email,
             username: user.username,
         });
 
+        const newRefreshToken = generateRefreshToken({
+            userId: user._id.toString(),
+        });
+
         return sendSuccess(res, {
             accessToken: newAccessToken,
+            refreshToken: newRefreshToken, // Return new refresh token
             expiresIn: 1800, // 30 minutes
         });
 

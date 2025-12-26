@@ -9,7 +9,7 @@ import PostCard from '../components/PostCard';
 import EditPostModal from '../components/EditPostModal';
 import ImageModal from '../components/ImageModal';
 import { BlogService } from '../services/blogService';
-import { Edit, Calendar, Users } from 'lucide-react';
+import { Edit, Calendar, Users, Send } from 'lucide-react';
 
 /**
  * Profile Page
@@ -116,7 +116,7 @@ export default function Profile() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-900">
+            <div className="min-h-screen flex items-center justify-center bg-gray-200 dark:bg-slate-900">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
                     <p className="mt-4 text-gray-600 dark:text-gray-300">Loading profile...</p>
@@ -127,7 +127,7 @@ export default function Profile() {
 
     if (error) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-900 px-4">
+            <div className="min-h-screen flex items-center justify-center bg-gray-200 dark:bg-slate-900 px-4">
                 <div className="max-w-md w-full text-center">
                     <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8">
                         <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
@@ -153,10 +153,10 @@ export default function Profile() {
     });
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 py-8 px-4">
+        <div className="min-h-screen bg-gray-200 dark:bg-slate-900 py-4 md:py-8 px-4">
             <div className="max-w-4xl mx-auto">
                 {/* Profile Header */}
-                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 mb-6">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6 md:p-8 mb-6">
                     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                         {/* Avatar */}
                         <UserAvatar
@@ -166,19 +166,28 @@ export default function Profile() {
                         />
 
                         {/* Profile Info */}
-                        <div className="flex-1 text-center sm:text-left">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+                        <div className="flex-1 text-center sm:text-left w-full sm:w-auto">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
                                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                                     {profile.displayName}
                                 </h1>
                                 {isOwnProfile ? (
-                                    <Link
-                                        to="/profile/edit"
-                                        className="mt-4 sm:mt-0 inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                                    >
-                                        <Edit size={18} />
-                                        Edit Profile
-                                    </Link>
+                                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto mt-3 sm:mt-0">
+                                        <Link
+                                            to="/profile/edit"
+                                            className="flex w-full sm:w-auto sm:inline-flex justify-center items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                                        >
+                                            <Edit size={18} />
+                                            Edit Profile
+                                        </Link>
+                                        <Link
+                                            to="/sent-requests"
+                                            className="flex w-full sm:w-auto sm:inline-flex justify-center items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors"
+                                        >
+                                            <Send size={18} />
+                                            Sent Requests
+                                        </Link>
+                                    </div>
                                 ) : (
                                     <FollowButton
                                         username={profile.username}
@@ -202,7 +211,7 @@ export default function Profile() {
                                                 }));
                                             }
                                         }}
-                                        className="mt-4 sm:mt-0"
+                                        className="mt-4 sm:mt-0 w-full sm:w-auto justify-center"
                                     />
                                 )}
                             </div>
@@ -218,7 +227,7 @@ export default function Profile() {
                             )}
 
                             {/* Stats */}
-                            <div className="flex flex-wrap gap-6 text-sm">
+                            <div className="flex flex-wrap justify-center sm:justify-start gap-6 text-sm">
                                 <div className="flex items-center gap-2">
                                     <Users size={18} className="text-gray-500 dark:text-gray-400" />
                                     <span className="text-gray-900 dark:text-white font-semibold">

@@ -24,7 +24,7 @@ export default function CreatePost() {
     };
 
     return (
-        <div className="max-w-xl mx-auto py-8 px-4">
+        <div className="max-w-xl mx-auto py-4 md:py-8 px-4">
             <h1 className="text-4xl font-extrabold mb-8 bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
                 Create New Post
             </h1>
@@ -35,7 +35,7 @@ export default function CreatePost() {
                 </div>
             )}
 
-            <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-2xl shadow-xl shadow-gray-200 dark:shadow-none border border-gray-100 dark:border-slate-700">
+            <div className="bg-white dark:bg-slate-800 p-4 md:p-8 rounded-2xl shadow-xl shadow-gray-300/50 dark:shadow-none border border-gray-200 dark:border-slate-700">
                 <PostForm onSubmit={handleCreatePost} isSubmitting={isSubmitting} />
             </div>
         </div>

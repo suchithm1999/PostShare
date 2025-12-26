@@ -164,7 +164,7 @@ export default function Signup() {
                                 value={formData.displayName}
                                 onChange={handleChange}
                                 onBlur={handleBlur}
-                                className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-gray-900 dark:text-white ${errors.displayName ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-slate-600 focus:ring-indigo-500 dark:focus:ring-indigo-400'
+                                className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-base text-gray-900 dark:text-white ${errors.displayName ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-slate-600 focus:ring-indigo-500 dark:focus:ring-indigo-400'
                                     } focus:ring-2 focus:border-transparent transition-all`}
                                 placeholder="John Doe"
                                 disabled={isLoading}
@@ -185,7 +185,7 @@ export default function Signup() {
                                 value={formData.username}
                                 onChange={handleChange}
                                 onBlur={handleBlur}
-                                className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-gray-900 dark:text-white ${errors.username ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-slate-600 focus:ring-indigo-500 dark:focus:ring-indigo-400'
+                                className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-base text-gray-900 dark:text-white ${errors.username ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-slate-600 focus:ring-indigo-500 dark:focus:ring-indigo-400'
                                     } focus:ring-2 focus:border-transparent transition-all`}
                                 placeholder="johndoe"
                                 disabled={isLoading}
@@ -209,7 +209,7 @@ export default function Signup() {
                                 value={formData.email}
                                 onChange={handleChange}
                                 onBlur={handleBlur}
-                                className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-gray-900 dark:text-white ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-slate-600 focus:ring-indigo-500 dark:focus:ring-indigo-400'
+                                className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-base text-gray-900 dark:text-white ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-slate-600 focus:ring-indigo-500 dark:focus:ring-indigo-400'
                                     } focus:ring-2 focus:border-transparent transition-all`}
                                 placeholder="you@example.com"
                                 disabled={isLoading}
@@ -230,7 +230,7 @@ export default function Signup() {
                                 value={formData.password}
                                 onChange={handleChange}
                                 onBlur={handleBlur}
-                                className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-gray-900 dark:text-white ${errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-slate-600 focus:ring-indigo-500 dark:focus:ring-indigo-400'
+                                className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-base text-gray-900 dark:text-white ${errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-slate-600 focus:ring-indigo-500 dark:focus:ring-indigo-400'
                                     } focus:ring-2 focus:border-transparent transition-all`}
                                 placeholder="••••••••"
                                 disabled={isLoading}
@@ -272,7 +272,7 @@ export default function Signup() {
                                     Creating account...
                                 </span>
                             ) : (
-                                'Create dì/account'
+                                'Create Account'
                             )}
                         </button>
                     </form>

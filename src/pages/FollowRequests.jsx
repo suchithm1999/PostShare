@@ -77,12 +77,12 @@ export default function FollowRequests() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 py-8 px-4">
+        <div className="min-h-screen bg-gray-200 dark:bg-slate-900 py-8 px-4">
             <div className="max-w-3xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-6">
                     <button
-                        onClick={() => navigate(-1)}
+                        onClick={() => navigate('/')}
                         className="p-2 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
                         title="Go back"
                     >

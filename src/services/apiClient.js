@@ -131,7 +131,8 @@ async function refreshAccessToken() {
 
         if (response.ok) {
             const data = await response.json();
-            setTokens(data.accessToken, refreshToken);
+            // Store both new access token AND new refresh token (token rotation)
+            setTokens(data.accessToken, data.refreshToken || refreshToken);
             return true;
         }
 
