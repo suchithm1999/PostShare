@@ -2,11 +2,25 @@
     "buildCommand": "npm run build",
     "outputDirectory": "dist",
     "ignoreCommand": "bash .vercel/ignored-build-step.sh",
-    "routes": [
+    "rewrites": [
         {
-            "src": "/api/(.*)",
-            "dest": "/api/$1"
+            "source": "/api/auth/:path*",
+            "destination": "/api/auth"
         },
+        {
+            "source": "/api/posts/:path*",
+            "destination": "/api/posts"
+        },
+        {
+            "source": "/api/users/me/:path*",
+            "destination": "/api/users-me"
+        },
+        {
+            "source": "/api/users/:path*",
+            "destination": "/api/users"
+        }
+    ],
+    "routes": [
         {
             "handle": "filesystem"
         },
