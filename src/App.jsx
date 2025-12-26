@@ -10,6 +10,8 @@ import Signup from './pages/Signup';
 import OAuthCallback from './pages/OAuthCallback';
 import Profile from './pages/Profile';
 import EditProfile from './pages/EditProfile';
+import FollowRequests from './pages/FollowRequests';
+import SentRequests from './pages/SentRequests';
 
 function App() {
   const [theme, setTheme] = useState(
@@ -99,6 +101,26 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Profile />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Follow Requests Route */}
+              <Route
+                path="/follow-requests"
+                element={
+                  <ProtectedRoute>
+                    <FollowRequests />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Sent Requests Route */}
+              <Route
+                path="/sent-requests"
+                element={
+                  <ProtectedRoute>
+                    <SentRequests />
                   </ProtectedRoute>
                 }
               />
