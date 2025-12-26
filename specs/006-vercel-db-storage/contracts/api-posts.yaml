@@ -1,0 +1,438 @@
+openapi: 3.0.3
+info:
+  title: PostShare Posts API
+  description: API for managing blog posts in PostShare application
+  version: 1.0.0
+  contact:
+    name: PostShare Team
+
+servers:
+  - url: https://{domain}/api
+    description: Vercel deployment
+    variables:
+      domain:
+        default: localhost:3000
+        description: Deployment domain
+  - url: http://localhost:3000/api
+    description: Local development
+
+tags:
+  - name: posts
+    description: Blog post operations
+
+paths:
+  /posts:
+    get:
+      tags:
+        - posts
+      summary: List all posts
+      description: Retrieve all blog posts, ordered by creation date (newest first)
+      operationId: listPosts
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of posts to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: offset
+          in: query
+          description: Number of posts to skip (for pagination)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: author
+          in: query
+          description: Filter by author (future enhancement)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  posts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Post'
+                  total:
+                    type: integer
+                    description: Total number of posts
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /posts/create:
+    post:
+      tags:
+        - posts
+      summary: Create a new post
+      description: Create a new blog post with optional image
+      operationId: createPost
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePostRequest'
+      responses:
+        '201':
+          description: Post created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /posts/{id}:
+    parameters:
+      - name: id
+        in: path
+        description: MongoDB ObjectId of the post
+        required: true
+        schema:
+          type: string
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: '676c2f9a8e7b12a3c4d5e6f7'
+    
+    get:
+      tags:
+        - posts
+      summary: Get a single post
+      description: Retrieve a specific post by ID
+      operationId: getPost
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    
+    put:
+      tags:
+        - posts
+      summary: Update a post
+      description: Update an existing post (title, content, or image)
+      operationId: updatePost
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePostRequest'
+      responses:
+        '200':
+          description: Post updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Version conflict (optimistic locking)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: 'Version conflict. Post was modified by another device.'
+                code: 'VERSION_CONFLICT'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    
+    delete:
+      tags:
+        - posts
+      summary: Delete a post
+      description: Delete a post and its associated image from Cloudinary
+      operationId: deletePost
+      responses:
+        '200':
+          description: Post deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Post deleted successfully'
+                  deletedImagePublicId:
+                    type: string
+                    nullable: true
+                    description: Cloudinary public_id of deleted image (if any)
+                    example: 'postshare/posts/abc123'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /migrate:
+    post:
+      tags:
+        - posts
+      summary: Migrate localStorage posts
+      description: Bulk create posts from localStorage migration
+      operationId: migratePosts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                posts:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CreatePostRequest'
+                  description: Array of posts to migrate
+      responses:
+        '200':
+          description: Migration completed (may include partial failures)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: integer
+                    description: Number of posts successfully migrated
+                  failed:
+                    type: integer
+                    description: Number of posts that failed to migrate
+                  posts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Post'
+                    description: Successfully migrated posts
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        index:
+                          type: integer
+                        error:
+                          type: string
+                    description: Errors for failed posts
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+components:
+  schemas:
+    Post:
+      type: object
+      required:
+        - _id
+        - title
+        - content
+        - author
+        - createdAt
+        - updatedAt
+        - version
+      properties:
+        _id:
+          type: string
+          description: MongoDB ObjectId
+          example: '676c2f9a8e7b12a3c4d5e6f7'
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          example: 'My First Cloud Post'
+        content:
+          type: string
+          minLength: 1
+          maxLength: 10000
+          example: 'This post is stored in MongoDB Atlas!'
+        imageUrl:
+          type: string
+          nullable: true
+          format: uri
+          example: 'https://res.cloudinary.com/demo/image/upload/v1234567890/postshare/posts/abc123.jpg'
+        imagePublicId:
+          type: string
+          nullable: true
+          example: 'postshare/posts/abc123'
+        imageMetadata:
+          type: object
+          nullable: true
+          properties:
+            width:
+              type: integer
+              example: 1920
+            height:
+              type: integer
+              example: 1080
+            format:
+              type: string
+              example: 'jpg'
+            bytes:
+              type: integer
+              example: 245678
+            uploadedAt:
+              type: string
+              format: date-time
+              example: '2025-12-25T10:30:00.000Z'
+        author:
+          type: string
+          description: Author identifier (currently 'anonymous')
+          example: 'anonymous'
+        createdAt:
+          type: string
+          format: date-time
+          example: '2025-12-25T10:30:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2025-12-25T10:30:00.000Z'
+        syncStatus:
+          type: string
+          enum: [synced, pending, error]
+          default: synced
+        version:
+          type: integer
+          minimum: 1
+          description: Version number for optimistic locking
+          example: 1
+
+    CreatePostRequest:
+      type: object
+      required:
+        - title
+        - content
+        - author
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          example: 'My New Post'
+        content:
+          type: string
+          minLength: 1
+          maxLength: 10000
+          example: 'This is the post content...'
+        imageUrl:
+          type: string
+          nullable: true
+          format: uri
+          description: Cloudinary URL (if image was uploaded first)
+          example: 'https://res.cloudinary.com/demo/image/upload/...'
+        imagePublicId:
+          type: string
+          nullable: true
+          description: Cloudinary public_id
+          example: 'postshare/posts/abc123'
+        imageMetadata:
+          type: object
+          nullable: true
+          description: Image metadata from Cloudinary upload response
+        author:
+          type: string
+          default: 'anonymous'
+          example: 'anonymous'
+
+    UpdatePostRequest:
+      type: object
+      required:
+        - version
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        content:
+          type: string
+          minLength: 1
+          maxLength: 10000
+        imageUrl:
+          type: string
+          nullable: true
+          format: uri
+        imagePublicId:
+          type: string
+          nullable: true
+        imageMetadata:
+          type: object
+          nullable: true
+        version:
+          type: integer
+          minimum: 1
+          description: Current version (for optimistic locking)
+          example: 1
+
+    Error:
+      type: object
+      required:
+        - error
+        - code
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+        code:
+          type: string
+          description: Machine-readable error code
+        details:
+          type: object
+          description: Additional error context (optional)
+
+  responses:
+    ValidationError:
+      description: Invalid request data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: 'Validation failed'
+            code: 'VALIDATION_ERROR'
+            details:
+              title: 'Title is required'
+              content: 'Content must be 10,000 characters or less'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: 'Post not found'
+            code: 'NOT_FOUND'
+
+    ServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: 'An unexpected error occurred'
+            code: 'INTERNAL_ERROR'

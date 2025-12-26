@@ -1,20 +1,21 @@
 import { useEffect, useState } from 'react';
+import { useLocation, Link } from 'react-router-dom';
 import PostCard from '../components/PostCard';
 import EditPostModal from '../components/EditPostModal';
 import ImageModal from '../components/ImageModal';
 import { BlogService } from '../services/blogService';
-import { Loader2, Trash2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 
 export default function Feed() {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [editingPost, setEditingPost] = useState(null);
     const [viewingImage, setViewingImage] = useState(null);
+    const location = useLocation();
 
     useEffect(() => {
         loadPosts();
-    }, []);
+    }, [location]); // Reload when location changes (navigating back to feed)
 
     const loadPosts = async () => {
         try {
@@ -35,22 +36,10 @@ export default function Feed() {
         );
     }
 
-    const handleClearFeed = async () => {
-        if (window.confirm('Are you sure you want to delete all posts? This cannot be undone.')) {
-            try {
-                await BlogService.clearAllPosts();
-                setPosts([]);
-            } catch (error) {
-                console.error("Failed to clear feed", error);
-                alert("Failed to clear feed. Please try again.");
-            }
-        }
-    };
-
     const handleDeletePost = async (id) => {
         try {
             await BlogService.deletePost(id);
-            setPosts(posts.filter(post => post.id !== id));
+            setPosts(posts.filter(post => post._id !== id));
         } catch (error) {
             console.error("Failed to delete post", error);
             alert("Failed to delete post. Please try again.");
@@ -64,7 +53,7 @@ export default function Feed() {
     const handleUpdatePost = async (id, dto) => {
         try {
             const updatedPost = await BlogService.updatePost(id, dto);
-            setPosts(posts.map(p => p.id === id ? updatedPost : p));
+            setPosts(posts.map(p => p._id === id ? updatedPost : p));
         } catch (error) {
             console.error("Failed to update post", error);
             alert(error.message || "Failed to update post. Please try again.");
@@ -81,15 +70,6 @@ export default function Feed() {
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
                     Latest Posts
                 </h1>
-                {posts.length > 0 && (
-                    <button
-                        onClick={handleClearFeed}
-                        className="flex items-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 px-3 py-1.5 rounded-lg transition-colors text-sm font-medium"
-                    >
-                        <Trash2 size={16} />
-                        Clear Feed
-                    </button>
-                )}
             </div>
 
             {posts.length === 0 ? (
@@ -103,7 +83,7 @@ export default function Feed() {
                 <div className="space-y-6">
                     {posts.map((post) => (
                         <PostCard
-                            key={post.id}
+                            key={post._id}
                             post={post}
                             onDelete={handleDeletePost}
                             onEdit={handleEditPost}
