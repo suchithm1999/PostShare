@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sun, Moon, LogOut, User, ChevronDown } from 'lucide-react';
+import { Sun, Moon, LogOut, User, ChevronDown, Heart, Send } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useFollowRequests } from '../hooks/useFollowRequests';
 import UserAvatar from './UserAvatar';
+import NotificationBadge from './NotificationBadge';
 
 export default function Navbar({ theme, toggleTheme }) {
     const { isAuthenticated, user, logout } = useAuth();
@@ -10,9 +12,16 @@ export default function Navbar({ theme, toggleTheme }) {
     const [showDropdown, setShowDropdown] = useState(false);
     const dropdownRef = useRef(null);
 
+    // Poll for follow requests (only when authenticated)
+    const { count: notificationCount } = useFollowRequests(30000); // Poll every 30 seconds
+
     const handleLogout = () => {
         logout();
         navigate('/login');
+    };
+
+    const handleNotificationClick = () => {
+        navigate('/follow-requests');
     };
 
     // Close dropdown when clicking outside
@@ -50,6 +59,13 @@ export default function Navbar({ theme, toggleTheme }) {
                             <Link to="/" className="btn btn-secondary hidden sm:inline-flex">
                                 Feed
                             </Link>
+
+                            {/* Notification Badge */}
+                            <NotificationBadge
+                                count={notificationCount}
+                                onClick={handleNotificationClick}
+                            />
+
                             <Link to="/create" className="btn btn-primary">
                                 New Post
                             </Link>
@@ -86,6 +102,30 @@ export default function Navbar({ theme, toggleTheme }) {
                                             <User size={18} />
                                             <span>Profile</span>
                                         </Link>
+
+                                        <Link
+                                            to="/follow-requests"
+                                            onClick={() => setShowDropdown(false)}
+                                            className="flex items-center gap-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                                        >
+                                            <Heart size={18} />
+                                            <span>Incoming Requests</span>
+                                            {notificationCount > 0 && (
+                                                <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                                    {notificationCount}
+                                                </span>
+                                            )}
+                                        </Link>
+
+                                        <Link
+                                            to="/sent-requests"
+                                            onClick={() => setShowDropdown(false)}
+                                            className="flex items-center gap-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                                        >
+                                            <Send size={18} />
+                                            <span>Sent Requests</span>
+                                        </Link>
+
                                         <hr className="my-2 border-gray-200 dark:border-slate-700" />
                                         <button
                                             onClick={() => {

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import api from '../services/apiClient';
+import followService from '../services/followService';
 import UserAvatar from '../components/UserAvatar';
 import FollowButton from '../components/FollowButton';
 import PostCard from '../components/PostCard';
@@ -24,6 +25,7 @@ export default function Profile() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [isFollowing, setIsFollowing] = useState(false);
+    const [pendingRequestId, setPendingRequestId] = useState(null);
 
     // Post actions state
     const [editingPost, setEditingPost] = useState(null);
@@ -61,9 +63,19 @@ export default function Profile() {
                         f => f.username === currentUser?.username
                     ) || false;
                     setIsFollowing(following);
+
+                    // Check for pending follow request
+                    if (!following) {
+                        const sentRequests = await followService.getSentRequests();
+                        const pendingRequest = sentRequests.requests?.find(
+                            req => req.recipient.username === username
+                        );
+                        setPendingRequestId(pendingRequest?._id || null);
+                    }
                 } catch (err) {
                     // If error, assume not following
                     setIsFollowing(false);
+                    setPendingRequestId(null);
                 }
             }
         } catch (err) {
@@ -171,13 +183,24 @@ export default function Profile() {
                                     <FollowButton
                                         username={profile.username}
                                         initialFollowing={isFollowing}
-                                        onFollowChange={(following) => {
-                                            setIsFollowing(following);
-                                            // Update follower count optimistically
-                                            setProfile(prev => ({
-                                                ...prev,
-                                                followerCount: prev.followerCount + (following ? 1 : -1),
-                                            }));
+                                        pendingRequestId={pendingRequestId}
+                                        onFollowChange={(state, requestId) => {
+                                            if (state === 'request_sent') {
+                                                // Request sent
+                                                setPendingRequestId(requestId);
+                                            } else if (state === 'request_canceled') {
+                                                // Request canceled
+                                                setPendingRequestId(null);
+                                            } else if (typeof state === 'boolean') {
+                                                // Following state changed (unfollow)
+                                                setIsFollowing(state);
+                                                setPendingRequestId(null);
+                                                // Update follower count optimistically
+                                                setProfile(prev => ({
+                                                    ...prev,
+                                                    followerCount: prev.followerCount + (state ? 1 : -1),
+                                                }));
+                                            }
                                         }}
                                         className="mt-4 sm:mt-0"
                                     />

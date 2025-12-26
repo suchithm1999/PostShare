@@ -31,6 +31,13 @@ import userByUsername from './api/users/[username].js';
 import userFollow from './api/users/[username]/follow.js';
 import userFollowers from './api/users/[username]/followers.js';
 import userFollowing from './api/users/[username]/following.js';
+import followRequest from './api/users/[username]/follow-request.js';
+
+// Follow requests routes
+import getFollowRequests from './api/users/me/follow-requests/index.js';
+import handleFollowRequest from './api/users/me/follow-requests/[id].js';
+import getSentRequests from './api/users/me/sent-requests/index.js';
+import cancelSentRequest from './api/users/me/sent-requests/[id].js';
 
 // Posts routes
 import getPosts from './api/posts/index.js';
@@ -63,7 +70,15 @@ app.put('/api/users/me', wrapHandler(userMe));
 app.post('/api/users/me/avatar', wrapHandler(userAvatar));
 app.delete('/api/users/me/avatar', wrapHandler(userAvatar));
 
+// Follow request routes (user's own requests)
+app.get('/api/users/me/follow-requests', wrapHandler(getFollowRequests));
+app.post('/api/users/me/follow-requests/:id/accept', wrapHandler(handleFollowRequest));
+app.post('/api/users/me/follow-requests/:id/decline', wrapHandler(handleFollowRequest));
+app.get('/api/users/me/sent-requests', wrapHandler(getSentRequests));
+app.delete('/api/users/me/sent-requests/:id', wrapHandler(cancelSentRequest));
+
 // Follow routes (must be before :username route to avoid conflicts)
+app.post('/api/users/:username/follow-request', wrapHandler(followRequest));
 app.post('/api/users/:username/follow', wrapHandler(userFollow));
 app.delete('/api/users/:username/follow', wrapHandler(userFollow));
 app.get('/api/users/:username/followers', wrapHandler(userFollowers));

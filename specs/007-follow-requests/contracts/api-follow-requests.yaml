@@ -1,0 +1,371 @@
+openapi: 3.0.3
+info:
+  title: PostShare Follow Requests API
+  description: API endpoints for managing follow requests
+  version: 1.0.0
+  contact:
+    name: PostShare API
+servers:
+  - url: http://localhost:3000/api
+    description: Local development
+  - url: https://postshare.vercel.app/api
+    description: Production
+
+paths:
+  /users/{username}/follow-request:
+    post:
+      summary: Send follow request
+      description: Send a follow request to another user
+      operationId: sendFollowRequest
+      tags:
+        - Follow Requests
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: Username of the user to send request to
+          schema:
+            type: string
+            example: johndoe
+      responses:
+        '201':
+          description: Follow request created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  requestId:
+                    type: string
+                    example: 507f1f77bcf86cd799439011
+                  message:
+                    type: string
+                    example: Follow request sent successfully
+        '400':
+          description: Bad request (already following, self-request, duplicate)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/me/follow-requests:
+    get:
+      summary: Get incoming follow requests
+      description: Get all pending follow requests for the current user
+      operationId: getIncomingRequests
+      tags:
+        - Follow Requests
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of incoming requests
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  count:
+                    type: integer
+                    example: 3
+                  requests:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FollowRequest'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/me/follow-requests/{id}/accept:
+    post:
+      summary: Accept follow request
+      description: Accept a pending follow request, creating an active follow relationship
+      operationId: acceptFollowRequest
+      tags:
+        - Follow Requests
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the follow request to accept
+          schema:
+            type: string
+            example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Follow request accepted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Follow request accepted
+                  followId:
+                    type: string
+                    example: 507f1f77bcf86cd799439014
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (not the recipient)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/me/follow-requests/{id}/decline:
+    post:
+      summary: Decline follow request
+      description: Decline a pending follow request (silent - no notification to requester)
+      operationId: declineFollowRequest
+      tags:
+        - Follow Requests
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the follow request to decline
+          schema:
+            type: string
+            example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Follow request declined successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Follow request declined
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (not the recipient)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/me/sent-requests:
+    get:
+      summary: Get outgoing follow requests
+      description: Get all pending follow requests sent by the current user
+      operationId: getSentRequests
+      tags:
+        - Follow Requests
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of sent requests
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  count:
+                    type: integer
+                    example: 2
+                  requests:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SentFollowRequest'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/me/sent-requests/{id}:
+    delete:
+      summary: Cancel sent follow request
+      description: Cancel a pending follow request that you sent
+      operationId: cancelFollowRequest
+      tags:
+        - Follow Requests
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the follow request to cancel
+          schema:
+            type: string
+            example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Follow request canceled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Follow request canceled
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (not the requester)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token from /api/auth/login
+
+  schemas:
+    FollowRequest:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 507f1f77bcf86cd799439011
+        requester:
+          type: object
+          properties:
+            _id:
+              type: string
+              example: 507f1f77bcf86cd799439012
+            username:
+              type: string
+              example: alice
+            displayName:
+              type: string
+              example: Alice Johnson
+            avatarUrl:
+              type: string
+              nullable: true
+              example: https://res.cloudinary.com/example/avatar.jpg
+        createdAt:
+          type: string
+          format: date-time
+          example: 2025-12-26T14:30:00Z
+
+    SentFollowRequest:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 507f1f77bcf86cd799439011
+        recipient:
+          type: object
+          properties:
+            _id:
+              type: string
+              example: 507f1f77bcf86cd799439013
+            username:
+              type: string
+              example: bob
+            displayName:
+              type: string
+              example: Bob Smith
+            avatarUrl:
+              type: string
+              nullable: true
+              example: https://res.cloudinary.com/example/avatar.jpg
+        createdAt:
+          type: string
+          format: date-time
+          example: 2025-12-26T14:30:00Z
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Error message description
+        code:
+          type: string
+          example: ERROR_CODE
+        details:
+          type: object
+          nullable: true
+          description: Additional error context
+
+tags:
+  - name: Follow Requests
+    description: Manage follow request workflows
