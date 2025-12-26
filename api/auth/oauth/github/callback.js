@@ -115,7 +115,8 @@ export default async function handler(req, res) {
                 {
                     $set: {
                         lastLoginAt: new Date(),
-                        avatarUrl: avatar_url || user.avatarUrl, // Update avatar if provided
+                        // Only update avatar from GitHub if user hasn't uploaded a custom one
+                        ...(user.avatarPublicId ? {} : { avatarUrl: avatar_url || user.avatarUrl }),
                     },
                 }
             );
@@ -133,7 +134,8 @@ export default async function handler(req, res) {
                         $set: {
                             'oauthProviders.github': String(githubId),
                             lastLoginAt: new Date(),
-                            avatarUrl: avatar_url || existingUser.avatarUrl,
+                            // Only update avatar from GitHub if user hasn't uploaded a custom one
+                            ...(existingUser.avatarPublicId ? {} : { avatarUrl: avatar_url || existingUser.avatarUrl }),
                         },
                     }
                 );

@@ -1,0 +1,95 @@
+.error-message {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 12px;
+    margin-top: 6px;
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    color: #dc2626;
+    font-size: 14px;
+    line-height: 1.5;
+    animation: slideDown 0.2s ease-out;
+}
+
+.error-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: #dc2626;
+}
+
+.error-text {
+    flex: 1;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .error-message {
+        background-color: rgba(220, 38, 38, 0.1);
+        border-color: rgba(220, 38, 38, 0.3);
+        color: #fca5a5;
+    }
+
+    .error-icon {
+        color: #fca5a5;
+    }
+}
+
+/* Animation */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Success variant */
+.error-message.success {
+    background-color: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #16a34a;
+}
+
+.error-message.success .error-icon {
+    color: #16a34a;
+}
+
+@media (prefers-color-scheme: dark) {
+    .error-message.success {
+        background-color: rgba(22, 163, 74, 0.1);
+        border-color: rgba(22, 163, 74, 0.3);
+   color: #86efac;
+    }
+
+    .error-message.success .error-icon {
+        color: #86efac;
+    }
+}
+
+/* Warning variant */
+.error-message.warning {
+    background-color: #fffbeb;
+    border-color: #fde68a;
+    color: #d97706;
+}
+
+.error-message.warning .error-icon {
+    color: #d97706;
+}
+
+@media (prefers-color-scheme: dark) {
+    .error-message.warning {
+        background-color: rgba(217, 119, 6, 0.1);
+        border-color: rgba(217, 119, 6, 0.3);
+        color: #fcd34d;
+    }
+
+    .error-message.warning .error-icon {
+        color: #fcd34d;
+    }
+}

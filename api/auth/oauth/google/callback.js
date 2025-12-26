@@ -100,7 +100,9 @@ export default async function handler(req, res) {
                 {
                     $set: {
                         lastLoginAt: new Date(),
-                        avatarUrl: picture || user.avatarUrl, // Update avatar if provided
+                        // Only update avatar from OAuth if user hasn't uploaded a custom one
+                        // If avatarPublicId exists, user has a custom avatar - don't overwrite it
+                        ...(user.avatarPublicId ? {} : { avatarUrl: picture || user.avatarUrl }),
                     },
                 }
             );
@@ -118,7 +120,9 @@ export default async function handler(req, res) {
                         $set: {
                             'oauthProviders.google': googleId,
                             lastLoginAt: new Date(),
-                            avatarUrl: picture || existingUser.avatarUrl,
+                            // Only update avatar from Google if user hasn't uploaded a custom one
+                            // If avatarPublicId exists, user has a custom avatar - don't overwrite it
+                            ...(existingUser.avatarPublicId ? {} : { avatarUrl: picture || existingUser.avatarUrl }),
                         },
                     }
                 );

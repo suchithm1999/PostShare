@@ -3,7 +3,7 @@
 **Feature Branch**: `006-vercel-db-storage`  
 **Created**: 2025-12-25  
 **Status**: Updated with authentication and social features  
-**Input**: User description: "use mongo db for storage instead of localstorage, use a free image storage space which is free of cost for uploading of images"
+**Input**: User description: "use mongo db for storage... (original)". Update: "Change private posts visibility: users who follow another user should be able to see that user's private posts."
 
 ## Clarifications
 
@@ -16,6 +16,11 @@ User requested extension to add authentication and user-specific posts with soci
 - Q: What profile information should users be able to set beyond their email? → A: Username, display name, profile picture (avatar)
 - Q: When a user follows someone, does it require approval or is it instant? → A: Instant follow (no approval needed, like Twitter/Instagram)
 - Q: What should unauthenticated users (not logged in) see when they visit the app? → A: Login/signup page only (authentication required to access app)
+
+### Session 2025-12-26
+
+- Q: Is Phase 8 (localStorage Migration - US6) necessary for this new app? → A: No, phase 8 is not necessary because we are a new app (no existing localStorage data to migrate)
+- Q: Is Phase 9 (Storage Quotas - US7) necessary at this time? → A: No, phase 9 is not necessary as of now, because we want to remove limit in future
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -58,20 +63,21 @@ Users need to establish their identity on the platform with a username, display 
 
 ### User Story 3 - Follow Users and Personalized Feed (Priority: P1)
 
-Users can follow other users to see their public posts in a personalized feed. Following is instant (no approval needed), encouraging network growth and content discovery.
+**Story Goal**: Users can follow others and see personalized feeds containing **both public and private posts** from users they follow.
 
 **Why this priority**: Core social functionality. The feed is the primary interface where users consume content. Following enables users to curate their experience and connect with others.
 
-**Independent Test**: Can be fully tested by creating two accounts, having one follow the other, posting a public post, and verifying it appears in the follower's feed. Tests instant follow and feed composition.
+**Independent Test**: Can be fully tested by creating two accounts, having one follow the other, posting a **private** post, and verifying it appears in the follower's feed. Tests instant follow and expanded privacy visibility.
 
 **Acceptance Scenarios**:
 
 1. **Given** a user views another user's profile, **When** they click "Follow", **Then** they immediately start following that user (no approval needed)
 2. **Given** a user follows another user, **When** the followed user creates a public post, **Then** it appears in the follower's feed
 3. **Given** a user unfollows someone, **When** they view their feed, **Then** that user's posts no longer appear
-4. **Given** a user views their feed, **When** the feed loads, **Then** it shows their own posts + public posts from users they follow, ordered by creation date (newest first)
+4. **Given** a user views their feed, **When** the feed loads, **Then** it shows their own posts + **public AND private** posts from users they follow, ordered by creation date
 5. **Given** a user has no followers, **When** they create a private post, **Then** only they can see it
-6. **Given** a user creates a public post, **When** their followers view their feeds, **Then** the post appears for all followers
+6. **Given** a user creates a **private** post, **When** their followers view their feeds, **Then** the post appears for all followers
+7. **Given** a user views a profile of someone they do **not** follow, **When** they look at the posts list, **Then** they see only public posts (private are hidden)
 
 ---
 
@@ -108,36 +114,44 @@ Users currently store images as base64 data URLs in localStorage, which is limit
 
 ---
 
-### User Story 6 - Seamless Migration from localStorage (Priority: P2)
+### User Story 6 - Seamless Migration from localStorage (Priority: P2) **[NOT APPLICABLE - NEW APP]**
 
-Existing users have posts stored in localStorage that need to be preserved when the new storage system is implemented. This feature automatically migrates existing localStorage data to the persistent database without data loss.
+**Status**: This user story is NOT APPLICABLE for new app installations. It was designed for migrating existing localStorage data from a previous version of the app. Since this is a new application with no existing localStorage data, Phase 8 tasks can be skipped.
 
-**Why this priority**: Important for user retention and trust. Protects existing user data and ensures a smooth transition. Not P1 because it's a one-time migration concern, not core ongoing functionality.
+~~Existing users have posts stored in localStorage that need to be preserved when the new storage system is implemented. This feature automatically migrates existing localStorage data to the persistent database without data loss.~~
 
-**Independent Test**: Can be fully tested by pre-populating localStorage with sample posts, then loading the updated application and verifying all posts are migrated to the database. Delivers value by preserving user work.
+**Why marked not applicable**: This is a new app with no existing localStorage data to migrate. Users will start fresh with MongoDB storage from day one.
 
-**Acceptance Scenarios**:
+**Original reasoning** (for reference): Important for user retention and trust. Protects existing user data and ensures a smooth transition. Not P1 because it's a one-time migration concern, not core ongoing functionality.
 
-1. **Given** a user has existing posts in localStorage, **When** they first load the updated application, **Then** all posts are automatically migrated to the database
-2. **Given** posts have been migrated, **When** the migration is complete, **Then** localStorage is cleared to prevent duplication
-3. **Given** migration is in progress, **When** the user navigates the application, **Then** they see a migration status indicator
-4. **Given** migration fails, **When** an error occurs, **Then** localStorage data is preserved and user is notified
+~~**Independent Test**: Can be fully tested by pre-populating localStorage with sample posts, then loading the updated application and verifying all posts are migrated to the database. Delivers value by preserving user work.~~
+
+~~**Acceptance Scenarios** (skipped for new app):~~
+
+1. ~~**Given** a user has existing posts in localStorage, **When** they first load the updated application, **Then** all posts are automatically migrated to the database~~
+2. ~~**Given** posts have been migrated, **When** the migration is complete, **Then** localStorage is cleared to prevent duplication~~
+3. ~~**Given** migration is in progress, **When** the user navigates the application, **Then** they see a migration status indicator~~
+4. ~~**Given** migration fails, **When** an error occurs, **Then** localStorage data is preserved and user is notified~~
 
 ---
 
-### User Story 7 - Manage Storage Costs and Limits (Priority: P3)
+### User Story 7 - Manage Storage Costs and Limits (Priority: P3) **[DEFERRED - Future Plan to Remove Limits]**
 
-Since the application uses free-tier cloud services, there are storage limits and quotas that need to be managed. This feature provides visibility into storage usage and enforces limits to stay within free tier constraints.
+**Status**: This user story is DEFERRED. The product direction is to remove storage limits in the future, so building quota management now would be wasted effort.
 
-**Why this priority**: Important for sustainability but not blocking core functionality. Can be added after basic persistence works. Users can still create posts without detailed quota management.
+~~Since the application uses free-tier cloud services, there are storage limits and quotas that need to be managed. This feature provides visibility into storage usage and enforces limits to stay within free tier constraints.~~
 
-**Independent Test**: Can be tested by checking storage metrics, attempting to exceed quotas, and verifying appropriate error handling. Delivers value by ensuring long-term viability.
+**Why deferred**: Plan is to remove storage limits entirely in future versions. No value in building quota enforcement that will be removed later.
 
-**Acceptance Scenarios**:
+**Original reasoning** (for reference): Important for sustainability but not blocking core functionality. Can be added after basic persistence works. Users can still create posts without detailed quota management.
 
-1. **Given** a user approaches storage limits, **When** they attempt to upload new content, **Then** they receive a warning about approaching quota limits
-2. **Given** storage quota is exceeded, **When** a new post or image is attempted, **Then** the system provides a clear error message and suggests actions
-3. **Given** an administrator views the system, **When** they check usage metrics, **Then** current storage usage and limits are displayed
+~~**Independent Test**: Can be tested by checking storage metrics, attempting to exceed quotas, and verifying appropriate error handling. Delivers value by ensuring long-term viability.~~
+
+~~**Acceptance Scenarios** (deferred):~~
+
+1. ~~**Given** a user approaches storage limits, **When** they attempt to upload new content, **Then** they receive a warning about approaching quota limits~~
+2. ~~**Given** storage quota is exceeded, **When** a new post or image is attempted, **Then** the system provides a clear error message and suggests actions~~
+3. ~~**Given** an administrator views the system, **When** they check usage metrics, **Then** current storage usage and limits are displayed~~
 
 ---
 
@@ -202,13 +216,14 @@ Since the application uses free-tier cloud services, there are storage limits an
 #### Post Visibility & Privacy
 
 - **FR-021**: System MUST allow users to mark each post as public or private when creating/editing
-- **FR-022**: System MUST show private posts only to the post author
-- **FR-023**: System MUST show public posts to the author and their followers in their feeds
-- **FR-024**: System MUST NOT show any posts to unauthenticated users
+- **FR-022**: System MUST show private posts to the post author and users who follow the author
+- **FR-023**: System MUST show public posts to the author, their followers, and unauthenticated/non-following users (on profile)
+- **FR-024**: System MUST NOT show any posts to unauthenticated users (Login required app)
+- **FR-NEW**: System MUST NOT show private posts to users who do not follow the author
 
 #### Feed Composition
 
-- **FR-025**: System MUST compose user feed from: (1) all posts by the user, (2) public posts by users they follow
+- **FR-025**: System MUST compose user feed from: (1) all posts by the user, (2) public and private posts by users they follow
 - **FR-026**: System MUST order feed posts by creation date (newest first)
 - **FR-027**: System MUST support pagination for feed (load more posts)
 - **FR-028**: System MUST update feed in real-time when user creates a new post
@@ -218,21 +233,21 @@ Since the application uses free-tier cloud services, there are storage limits an
 - **FR-029**: System MUST persist blog posts to a cloud database that survives browser cache clearing and device changes
 - **FR-030**: System MUST store uploaded images in a cloud storage service separate from the database
 - **FR-031**: System MUST support image uploads up to 5MB in size (post images) and 2MB (profile pictures)
-- **FR-032**: System MUST automatically migrate existing localStorage posts to the database on first application load after deployment
-- **FR-033**: System MUST preserve all existing post data during migration, including title, content, images, timestamps, and any metadata
+- **FR-032**: ~~System MUST automatically migrate existing localStorage posts to the database on first application load after deployment~~ **[NOT APPLICABLE - NEW APP]**
+- **FR-033**: ~~System MUST preserve all existing post data during migration, including title, content, images, timestamps, and any metadata~~ **[NOT APPLICABLE - NEW APP]**
 - **FR-034**: System MUST provide user feedback during image upload operations (progress, success, failure)
 - **FR-035**: System MUST generate and store unique, persistent URLs for uploaded images
 - **FR-036**: System MUST handle database connection failures gracefully without data loss
 - **FR-037**: System MUST validate image file types (JPEG, PNG, GIF, WebP only)
 - **FR-038**: System MUST compress images before upload to optimize storage usage
-- **FR-039**: System MUST stay within free-tier limits of chosen cloud services (estimated: 10GB storage, 5000 monthly requests)
+- **FR-039**: ~~System MUST stay within free-tier limits of chosen cloud services (estimated: 10GB storage, 5000 monthly requests)~~ **[DEFERRED - Limits will be removed in future]**
 - **FR-040**: System MUST work when deployed to Vercel without additional configuration beyond environment variables
 - **FR-041**: System MUST sync post data between database and UI within 3 seconds of any change
 - **FR-042**: System MUST handle concurrent access from multiple devices by the same user
 - **FR-043**: System MUST clean up orphaned images (uploaded but not associated with any post/profile) after 7 days
 - **FR-044**: System MUST maintain existing application functionality (create, edit, delete, view posts) with new storage backend
 - **FR-045**: System MUST provide clear error messages when storage operations fail
-- **FR-046**: System MUST support offline mode by caching posts locally and syncing when connection is restored
+- [ ] ~~FR-046: System MUST support offline mode by caching posts locally and syncing when connection is restored~~ **[SKIPPED - User request]**
 
 ### Key Entities
 
@@ -258,8 +273,8 @@ Since the application uses free-tier cloud services, there are storage limits an
 - **SC-007**: Profile setup (username, display name, avatar) completes within 15 seconds (P95)
 - **SC-008**: Profile picture uploads (under 2MB) complete within 8 seconds (P95)
 - **SC-009**: Following a user takes less than 2 seconds to complete and update UI
-- **SC-010**: User feed loads within 3 seconds showing correct posts (own + followed users' public posts)
-- **SC-011**: Feed correctly excludes private posts from other users (100% privacy enforcement)
+- **SC-010**: User feed loads within 3 seconds showing correct posts (own + followed users' **public/private** posts)
+- **SC-011**: Feed correctly excludes private posts from **non-followers** (100% privacy enforcement)
 - **SC-012**: Unauthenticated users are immediately redirected to login page (100% of attempts)
 
 #### Data Persistence & Storage
@@ -267,17 +282,17 @@ Since the application uses free-tier cloud services, there are storage limits an
 - **SC-013**: Users can access their posts from any device after creating them on a different device (100% success rate)
 - **SC-014**: Application loads existing posts within 3 seconds on average network conditions
 - **SC-015**: Image uploads complete within 10 seconds for files up to 5MB on average network conditions
-- **SC-016**: Zero data loss during migration from localStorage to database (100% of existing posts preserved)
+- **SC-016**: ~~Zero data loss during migration from localStorage to database (100% of existing posts preserved)~~ **[NOT APPLICABLE - NEW APP]**
 - **SC-017**: Application remains functional when deployed to Vercel with 100% feature parity
-- **SC-018**: Storage costs remain at $0/month by staying within free-tier limits for at least 100 users
+- **SC-018**: ~~Storage costs remain at $0/month by staying within free-tier limits for at least 100 users~~ **[DEFERRED - Limits will be removed in future]**
 - **SC-019**: 95% of storage operations (create, read, update, delete) complete successfully without errors
 - **SC-020**: Users receive clear feedback within 2 seconds for all storage operations (upload, save, delete)
-- **SC-021**: Application handles network failures gracefully with 0% data loss through draft/queue mechanisms
-- **SC-022**: 90% of users successfully complete the migration process without manual intervention
+- [ ] ~~SC-021: Application handles network failures gracefully with 0% data loss through draft/queue mechanisms~~ **[SKIPPED - User request]**
+- **SC-022**: ~~90% of users successfully complete the migration process without manual intervention~~ **[NOT APPLICABLE - NEW APP]**
 
 ### Assumptions
 
-- Users will have internet connectivity to access cloud storage (offline support is degraded functionality with eventual sync)
+- Users will have internet connectivity to access cloud storage (offline support is degraded functionality ~with eventual sync~ - sync skipped)
 - Free-tier limits for database and image storage will be sufficient for initial user base (~100 users, ~1000 posts, ~500 images)
 - Vercel deployment environment supports server-side operations needed for database and storage access
 - Image compression before upload can reduce file sizes by ~50% on average
@@ -302,3 +317,5 @@ Since the application uses free-tier cloud services, there are storage limits an
 - Automated content moderation or filtering
 - Custom domains or white-labeling
 - Analytics or usage tracking
+- Offline support and sync mechanisms
+- End-to-end (E2E) testing with Playwright

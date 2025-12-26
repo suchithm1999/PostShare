@@ -11,7 +11,7 @@ This feature migrates the PostShare blog application from browser-based localSto
 
 **Original Scope**: Enable users to access their blog posts from any device while supporting reliable image uploads up to 5MB via cloud storage.
 
-**Expanded Scope** (Session 2025-12-25): Add user authentication (email/password + Google/GitHub OAuth), user profiles (username, display name, avatar), social following system (instant follow, no approval), per-post visibility control (public/private), and personalized feeds showing user's own posts plus public posts from followed users.
+**Expanded Scope** (Session 2025-12-25): Add user authentication (email/password + Google/GitHub OAuth), user profiles (username, display name, avatar), social following system (instant follow, no approval), per-post visibility control (**public/private: private posts visible to followers**), and personalized feeds showing user's own posts plus public/private posts from followed users.
 
 **Technical Approach**: 
 - **Database**: MongoDB Atlas (free tier: 512MB, shared cluster) for posts, users, follows, sessions
@@ -215,7 +215,7 @@ tests/
   - Compression: `browser-image-compression` (existing)
   - **[NEW]** Authentication: JWT + bcrypt, OAuth 2.0 (Google/GitHub)
   - **[NEW]** Session Management: JWT with 7-day expiry, refresh tokens
-  - **[NEW]** Social Features: Instant follow model, feed composition algorithm
+  - **[NEW]** Social Features: Instant follow model, feed composition algorithm (**updated for private post visibility to followers**)
 
 **Key Decisions**:
 1. **MongoDB Atlas** over Supabase/Firebase - Schema flexibility, stable free tier, supports auth & social data
@@ -224,7 +224,7 @@ tests/
 4. **IndexedDB for offline** - Sufficient for use case, no service worker needed initially
 5. **[NEW] JWT + bcrypt** - Industry standard, serverless-friendly, no session storage needed
 6. **[NEW] OAuth 2.0** - Use passport.js strategies for Google/GitHub, minimal custom code
-7. **[NEW] Instant follow** - No approval workflow reduces complexity, privacy via post visibility
+7. **[NEW] Instant follow** - No approval workflow reduces complexity, privacy via post visibility (**followers see private**)
 
 ---
 
@@ -245,7 +245,7 @@ tests/
 - ✅ `contracts/api-posts.yaml` - OpenAPI 3.0 spec for Posts API (UPDATED)
   - **[UPDATED]** All endpoints now require authentication
   - **[UPDATED]** Create/update posts include authorId
-  - **[UPDATED]** List posts respects visibility and following
+  - **[UPDATED]** List posts respects visibility and following (**private posts included for followers**)
   - Optimistic locking support retained
   
 - ✅ `contracts/api-images.yaml` - OpenAPI 3.0 spec for Images API (UPDATED)

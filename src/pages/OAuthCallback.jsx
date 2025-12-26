@@ -34,39 +34,46 @@ export default function OAuthCallback() {
         }
 
         if (oauthSuccess && accessToken && refreshToken) {
-            console.log('✅ OAuth success! Logging in...');
+            console.log('✅ OAuth success! Fetching user profile...');
 
             // Mark as processed BEFORE any async operations
             hasProcessed.current = true;
 
-            // For now, we'll decode the JWT to get user info (temporary workaround)
-            // In production, we'd fetch from /api/users/me
-            try {
-                const payload = JSON.parse(atob(accessToken.split('.')[1]));
-                const user = {
-                    _id: payload.userId,
-                    email: payload.email,
-                    username: payload.username,
-                    displayName: payload.displayName || payload.username,
-                };
+            // Fetch user profile from API to get complete data including avatarUrl
+            const fetchUserProfile = async () => {
+                try {
+                    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+                    const response = await fetch(`${API_BASE_URL}/users/me`, {
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Content-Type': 'application/json',
+                        },
+                    });
 
-                console.log('👤 User from token:', user);
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch user profile');
+                    }
 
-                // Login with tokens and user data
-                login({
-                    accessToken,
-                    refreshToken,
-                    expiresIn: 1800,
-                    user,
-                });
+                    const userData = await response.json();
+                    console.log('👤 User profile fetched:', userData);
 
-                console.log('✅ Login complete! Redirecting to home...');
-                // Redirect to home
-                navigate('/', { replace: true });
-            } catch (error) {
-                console.error('Failed to parse token:', error);
-                navigate('/login?error=auth_failed', { replace: true });
-            }
+                    // Login with tokens and complete user data
+                    login({
+                        accessToken,
+                        refreshToken,
+                        expiresIn: 1800,
+                        user: userData,
+                    });
+
+                    console.log('✅ Login complete! Redirecting to home...');
+                    navigate('/', { replace: true });
+                } catch (error) {
+                    console.error('Failed to fetch user profile:', error);
+                    navigate('/login?error=auth_failed', { replace: true });
+                }
+            };
+
+            fetchUserProfile();
         } else {
             console.warn('⚠️ No valid OAuth data - redirecting to login');
             hasProcessed.current = true;

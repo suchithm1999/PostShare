@@ -2,11 +2,14 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import api from '../services/apiClient';
+import ErrorMessage from '../components/ErrorMessage';
+import { validateEmail } from '../utils/validators';
 
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [emailError, setEmailError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
     const { login } = useAuth();
@@ -16,9 +19,42 @@ export default function Login() {
     // Get the page user was trying to access before being redirected to login
     const from = location.state?.from?.pathname || '/';
 
+    const handleEmailChange = (e) => {
+        const value = e.target.value;
+        setEmail(value);
+
+        // Clear email error when user types
+        if (emailError) {
+            setEmailError('');
+        }
+    };
+
+    const handleEmailBlur = () => {
+        if (email) {
+            const validation = validateEmail(email);
+            if (!validation.valid) {
+                setEmailError(validation.error);
+            }
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setEmailError('');
+
+        // Validate email before submitting
+        const emailValidation = validateEmail(email);
+        if (!emailValidation.valid) {
+            setEmailError(emailValidation.error);
+            return;
+        }
+
+        if (!password) {
+            setError('Password is required');
+            return;
+        }
+
         setIsLoading(true);
 
         try {
@@ -65,12 +101,19 @@ export default function Login() {
                                 id="email"
                                 type="email"
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                onChange={handleEmailChange}
+                                onBlur={handleEmailBlur}
                                 required
-                                className="w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-gray-900 dark:text-white border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-all"
+                                className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-gray-900 dark:text-white ${emailError
+                                        ? 'border-red-500 focus:ring-red-500'
+                                        : 'border-gray-300 dark:border-slate-600 focus:ring-indigo-500 dark:focus:ring-indigo-400'
+                                    } focus:ring-2 focus:border-transparent transition-all`}
                                 placeholder="you@example.com"
                                 disabled={isLoading}
+                                aria-invalid={!!emailError}
+                                aria-describedby={emailError ? "email-error" : undefined}
                             />
+                            {emailError && <ErrorMessage message={emailError} />}
                         </div>
 
                         {/* Password Input */}
@@ -91,11 +134,7 @@ export default function Login() {
                         </div>
 
                         {/* Error Message */}
-                        {error && (
-                            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
-                                {error}
-                            </div>
-                        )}
+                        {error && <ErrorMessage message={error} />}
 
                         {/* Submit Button */}
                         <button

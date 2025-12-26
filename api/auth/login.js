@@ -112,6 +112,8 @@ export default async function handler(req, res) {
             createdAt: user.createdAt.toISOString(),
         };
 
+        console.log(`Debug: User ${user.email} login. AvatarURL: ${user.avatarUrl}`);
+
         return sendSuccess(res, {
             accessToken: tokens.accessToken,
             refreshToken: tokens.refreshToken,

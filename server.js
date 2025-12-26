@@ -11,8 +11,8 @@ app.use(cors({
     credentials: true, // Allow cookies
 }));
 app.use(cookieParser()); // Parse cookies
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' })); // Increased limit for image uploads
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Import API routes
 import signup from './api/auth/signup.js';
@@ -23,6 +23,19 @@ import googleOAuth from './api/auth/oauth/google.js';
 import googleCallback from './api/auth/oauth/google/callback.js';
 import githubOAuth from './api/auth/oauth/github.js';
 import githubCallback from './api/auth/oauth/github/callback.js';
+
+// User profile routes
+import userMe from './api/users/me.js';
+import userAvatar from './api/users/me/avatar.js';
+import userByUsername from './api/users/[username].js';
+import userFollow from './api/users/[username]/follow.js';
+import userFollowers from './api/users/[username]/followers.js';
+import userFollowing from './api/users/[username]/following.js';
+
+// Posts routes
+import getPosts from './api/posts/index.js';
+import createPost from './api/posts/create.js';
+import postById from './api/posts/[id].js';
 
 // Wrapper to convert Vercel serverless functions to Express handlers
 const wrapHandler = (handler) => async (req, res) => {
@@ -44,8 +57,32 @@ app.get('/api/auth/oauth/google/callback', wrapHandler(googleCallback));
 app.get('/api/auth/oauth/github', wrapHandler(githubOAuth));
 app.get('/api/auth/oauth/github/callback', wrapHandler(githubCallback));
 
+// User profile routes
+app.get('/api/users/me', wrapHandler(userMe));
+app.put('/api/users/me', wrapHandler(userMe));
+app.post('/api/users/me/avatar', wrapHandler(userAvatar));
+app.delete('/api/users/me/avatar', wrapHandler(userAvatar));
+
+// Follow routes (must be before :username route to avoid conflicts)
+app.post('/api/users/:username/follow', wrapHandler(userFollow));
+app.delete('/api/users/:username/follow', wrapHandler(userFollow));
+app.get('/api/users/:username/followers', wrapHandler(userFollowers));
+app.get('/api/users/:username/following', wrapHandler(userFollowing));
+
+// Username route (must be last among user routes)
+app.get('/api/users/:username', wrapHandler(userByUsername));
+
+// Posts routes
+app.get('/api/posts', wrapHandler(getPosts));
+app.post('/api/posts/create', wrapHandler(createPost));
+app.get('/api/posts/:id', wrapHandler(postById));
+app.put('/api/posts/:id', wrapHandler(postById));
+app.delete('/api/posts/:id', wrapHandler(postById));
+
 // Start server
 app.listen(PORT, () => {
     console.log(`🚀 API server running on http://localhost:${PORT}`);
     console.log(`📝 Auth endpoints available at http://localhost:${PORT}/api/auth/*`);
+    console.log(`👤 User endpoints available at http://localhost:${PORT}/api/users/*`);
+    console.log(`📮 Posts endpoints available at http://localhost:${PORT}/api/posts/*`);
 });

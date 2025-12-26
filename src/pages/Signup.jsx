@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import api from '../services/apiClient';
+import ErrorMessage from '../components/ErrorMessage';
+import { validateEmail, validateUsername, validatePassword, validateDisplayName } from '../utils/validators';
 
 export default function Signup() {
     const [formData, setFormData] = useState({
@@ -11,6 +13,7 @@ export default function Signup() {
         displayName: '',
     });
     const [errors, setErrors] = useState({});
+    const [passwordStrength, setPasswordStrength] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
 
     const { login } = useAuth();
@@ -19,43 +22,70 @@ export default function Signup() {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+
         // Clear error for this field when user starts typing
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
+        }
+
+        // Update password strength indicator
+        if (name === 'password' && value) {
+            const validation = validatePassword(value);
+            setPasswordStrength(validation.strength);
+        } else if (name === 'password') {
+            setPasswordStrength(null);
+        }
+    };
+
+    const handleBlur = (e) => {
+        const { name, value } = e.target;
+        if (!value) return;
+
+        let validation;
+        switch (name) {
+            case 'email':
+                validation = validateEmail(value);
+                break;
+            case 'username':
+                validation = validateUsername(value);
+                break;
+            case 'password':
+                validation = validatePassword(value);
+                break;
+            case 'displayName':
+                validation = validateDisplayName(value);
+                break;
+            default:
+                return;
+        }
+
+        if (!validation.valid) {
+            setErrors(prev => ({ ...prev, [name]: validation.error }));
         }
     };
 
     const validate = () => {
         const newErrors = {};
 
-        // Email validation
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        if (!formData.email) {
-            newErrors.email = 'Email is required';
-        } else if (!emailRegex.test(formData.email)) {
-            newErrors.email = 'Please enter a valid email address';
+        // Use our comprehensive validators
+        const emailValidation = validateEmail(formData.email);
+        if (!emailValidation.valid) {
+            newErrors.email = emailValidation.error;
         }
 
-        // Username validation
-        const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
-        if (!formData.username) {
-            newErrors.username = 'Username is required';
-        } else if (!usernameRegex.test(formData.username)) {
-            newErrors.username = 'Username must be 3-20 characters (letters, numbers, _, -)';
+        const usernameValidation = validateUsername(formData.username);
+        if (!usernameValidation.valid) {
+            newErrors.username = usernameValidation.error;
         }
 
-        // Display name validation
-        if (!formData.displayName) {
-            newErrors.displayName = 'Display name is required';
-        } else if (formData.displayName.length > 50) {
-            newErrors.displayName = 'Display name must be 50 characters or less';
+        const displayNameValidation = validateDisplayName(formData.displayName);
+        if (!displayNameValidation.valid) {
+            newErrors.displayName = displayNameValidation.error;
         }
 
-        // Password validation
-        if (!formData.password) {
-            newErrors.password = 'Password is required';
-        } else if (formData.password.length < 8) {
-            newErrors.password = 'Password must be at least 8 characters';
+        const passwordValidation = validatePassword(formData.password);
+        if (!passwordValidation.valid) {
+            newErrors.password = passwordValidation.error;
         }
 
         return newErrors;
@@ -96,6 +126,20 @@ export default function Signup() {
         }
     };
 
+    const getPasswordStrengthColor = () => {
+        if (!passwordStrength) return 'bg-gray-200';
+        if (passwordStrength === 'weak') return 'bg-red-500';
+        if (passwordStrength === 'medium') return 'bg-yellow-500';
+        return 'bg-green-500';
+    };
+
+    const getPasswordStrengthWidth = () => {
+        if (!passwordStrength) return '0%';
+        if (passwordStrength === 'weak') return '33%';
+        if (passwordStrength === 'medium') return '66%';
+        return '100%';
+    };
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 px-4 py-8">
             <div className="max-w-md w-full">
@@ -119,14 +163,14 @@ export default function Signup() {
                                 type="text"
                                 value={formData.displayName}
                                 onChange={handleChange}
-                                className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-gray-900 dark:text-white ${errors.displayName ? 'border-red-300' : 'border-gray-300 dark:border-slate-600'
-                                    } focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-all`}
+                                onBlur={handleBlur}
+                                className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-gray-900 dark:text-white ${errors.displayName ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-slate-600 focus:ring-indigo-500 dark:focus:ring-indigo-400'
+                                    } focus:ring-2 focus:border-transparent transition-all`}
                                 placeholder="John Doe"
                                 disabled={isLoading}
+                                aria-invalid={!!errors.displayName}
                             />
-                            {errors.displayName && (
-                                <p className="mt-1 text-sm text-red-600">{errors.displayName}</p>
-                            )}
+                            {errors.displayName && <ErrorMessage message={errors.displayName} />}
                         </div>
 
                         {/* Username */}
@@ -140,14 +184,14 @@ export default function Signup() {
                                 type="text"
                                 value={formData.username}
                                 onChange={handleChange}
-                                className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-gray-900 dark:text-white ${errors.username ? 'border-red-300' : 'border-gray-300 dark:border-slate-600'
-                                    } focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-all`}
+                                onBlur={handleBlur}
+                                className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-gray-900 dark:text-white ${errors.username ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-slate-600 focus:ring-indigo-500 dark:focus:ring-indigo-400'
+                                    } focus:ring-2 focus:border-transparent transition-all`}
                                 placeholder="johndoe"
                                 disabled={isLoading}
+                                aria-invalid={!!errors.username}
                             />
-                            {errors.username && (
-                                <p className="mt-1 text-sm text-red-600">{errors.username}</p>
-                            )}
+                            {errors.username && <ErrorMessage message={errors.username} />}
                             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                 3-20 characters, alphanumeric, underscore, or hyphen
                             </p>
@@ -164,14 +208,14 @@ export default function Signup() {
                                 type="email"
                                 value={formData.email}
                                 onChange={handleChange}
-                                className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-gray-900 dark:text-white ${errors.email ? 'border-red-300' : 'border-gray-300 dark:border-slate-600'
-                                    } focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-all`}
+                                onBlur={handleBlur}
+                                className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-gray-900 dark:text-white ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-slate-600 focus:ring-indigo-500 dark:focus:ring-indigo-400'
+                                    } focus:ring-2 focus:border-transparent transition-all`}
                                 placeholder="you@example.com"
                                 disabled={isLoading}
+                                aria-invalid={!!errors.email}
                             />
-                            {errors.email && (
-                                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-                            )}
+                            {errors.email && <ErrorMessage message={errors.email} />}
                         </div>
 
                         {/* Password */}
@@ -185,25 +229,33 @@ export default function Signup() {
                                 type="password"
                                 value={formData.password}
                                 onChange={handleChange}
-                                className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-gray-900 dark:text-white ${errors.password ? 'border-red-300' : 'border-gray-300 dark:border-slate-600'
-                                    } focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-all`}
+                                onBlur={handleBlur}
+                                className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-gray-900 dark:text-white ${errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-slate-600 focus:ring-indigo-500 dark:focus:ring-indigo-400'
+                                    } focus:ring-2 focus:border-transparent transition-all`}
                                 placeholder="••••••••"
                                 disabled={isLoading}
+                                aria-invalid={!!errors.password}
                             />
-                            {errors.password && (
-                                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                            {errors.password && <ErrorMessage message={errors.password} />}
+
+                            {/* Password Strength Indicator */}
+                            {formData.password && (
+                                <div className="mt-2">
+                                    <div className="h-1 w-full bg-gray-200 dark:bg-slate-600 rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full ${getPasswordStrengthColor()} transition-all duration-300`}
+                                            style={{ width: getPasswordStrengthWidth() }}
+                                        />
+                                    </div>
+                                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 capitalize">
+                                        Strength: {passwordStrength || 'Enter password'}
+                                    </p>
+                                </div>
                             )}
-                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                At least 8 characters
-                            </p>
                         </div>
 
                         {/* General Error */}
-                        {errors.general && (
-                            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
-                                {errors.general}
-                            </div>
-                        )}
+                        {errors.general && <ErrorMessage message={errors.general} />}
 
                         {/* Submit Button */}
                         <button
