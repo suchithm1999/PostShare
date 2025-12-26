@@ -104,9 +104,9 @@ export default function Login() {
                                 onChange={handleEmailChange}
                                 onBlur={handleEmailBlur}
                                 required
-                                className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-gray-900 dark:text-white ${emailError
-                                        ? 'border-red-500 focus:ring-red-500'
-                                        : 'border-gray-300 dark:border-slate-600 focus:ring-indigo-500 dark:focus:ring-indigo-400'
+                                className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-base text-gray-900 dark:text-white ${emailError
+                                    ? 'border-red-500 focus:ring-red-500'
+                                    : 'border-gray-300 dark:border-slate-600 focus:ring-indigo-500 dark:focus:ring-indigo-400'
                                     } focus:ring-2 focus:border-transparent transition-all`}
                                 placeholder="you@example.com"
                                 disabled={isLoading}
@@ -127,7 +127,7 @@ export default function Login() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                className="w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-gray-900 dark:text-white border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-all"
+                                className="w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-base text-gray-900 dark:text-white border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-all"
                                 placeholder="••••••••"
                                 disabled={isLoading}
                             />

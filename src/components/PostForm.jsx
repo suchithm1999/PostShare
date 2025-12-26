@@ -172,7 +172,7 @@ export default function PostForm({ onSubmit, isSubmitting, initialValues = null,
                         <button
                             type="button"
                             onClick={onCancel}
-                            className="btn btn-secondary w-full sm:w-auto"
+                            className="btn btn-secondary flex-1 sm:flex-none sm:w-auto whitespace-nowrap"
                             disabled={isSubmitting}
                         >
                             Cancel
@@ -180,7 +180,7 @@ export default function PostForm({ onSubmit, isSubmitting, initialValues = null,
                     )}
                     <button
                         type="submit"
-                        className="btn btn-primary w-full sm:w-auto flex-1 sm:flex-none"
+                        className="btn btn-primary flex-1 sm:flex-none sm:w-auto whitespace-nowrap"
                         disabled={isSubmitting || !content.trim()}
                     >
                         {isSubmitting ? (

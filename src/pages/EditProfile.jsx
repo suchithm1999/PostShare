@@ -132,7 +132,7 @@ export default function EditProfile() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 py-8 px-4">
+        <div className="min-h-screen bg-gray-200 dark:bg-slate-900 py-8 px-4">
             <div className="max-w-2xl mx-auto">
                 <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8">
                     {/* Header */}

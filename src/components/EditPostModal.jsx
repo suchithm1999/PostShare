@@ -21,7 +21,8 @@ export default function EditPostModal({ post, isOpen, onClose, onUpdate }) {
             onClose();
         } catch (error) {
             console.error('Failed to update post:', error);
-            // Error handling is done in parent, but reset submitting state here
+            // Re-throw so parent can handle with toast
+            throw error;
         } finally {
             setIsSubmitting(false);
         }

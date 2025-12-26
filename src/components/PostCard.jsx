@@ -17,7 +17,7 @@ export default function PostCard({ post, onDelete, onEdit, onViewImage }) {
     };
 
     return (
-        <article className="card mb-6 group transition-all duration-300 hover:shadow-2xl dark:hover:shadow-slate-700/50 relative">
+        <article className="card mb-0 md:mb-6 group transition-all duration-300 md:hover:shadow-2xl md:dark:hover:shadow-slate-700/50 relative">
             {/* Author Header */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -36,12 +36,12 @@ export default function PostCard({ post, onDelete, onEdit, onViewImage }) {
                         >
                             {post.author?.displayName || 'Unknown User'}
                         </Link>
-                        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex-wrap">
                             <span>@{post.author?.username || 'unknown'}</span>
-                            <span>•</span>
+                            <span className="hidden sm:inline">•</span>
                             <span>{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</span>
                             {post.updatedAt && new Date(post.updatedAt) > new Date(post.createdAt) && (
-                                <span className="text-xs">(edited)</span>
+                                <span className="text-xs opacity-75">(edited)</span>
                             )}
                         </div>
                     </div>
@@ -53,7 +53,7 @@ export default function PostCard({ post, onDelete, onEdit, onViewImage }) {
                         {onEdit && (
                             <button
                                 onClick={() => onEdit(post)}
-                                className="p-2 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                className="p-3 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20"
                                 title="Edit Post"
                             >
                                 <Edit2 size={18} />
@@ -63,7 +63,7 @@ export default function PostCard({ post, onDelete, onEdit, onViewImage }) {
                         {onDelete && (
                             <button
                                 onClick={handleDelete}
-                                className="p-2 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
+                                className="p-3 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
                                 title="Delete Post"
                             >
                                 <Trash2 size={18} />
@@ -77,8 +77,8 @@ export default function PostCard({ post, onDelete, onEdit, onViewImage }) {
             {post.visibility && (
                 <div className="mb-3">
                     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${post.visibility === 'public'
-                            ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400'
+                        ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400'
                         }`}>
                         {post.visibility === 'public' ? <Globe size={12} /> : <Lock size={12} />}
                         {post.visibility === 'public' ? 'Public' : 'Private'}

@@ -37,7 +37,7 @@ export default function Navbar({ theme, toggleTheme }) {
     }, []);
 
     return (
-        <header className="py-4 border-b border-gray-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-10 transition-colors duration-300">
+        <header className="fixed w-full py-4 border-b border-gray-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md top-0 z-10 transition-colors duration-300">
             <nav className="container mx-auto px-4 flex justify-between items-center">
                 <Link
                     to="/"
@@ -48,7 +48,7 @@ export default function Navbar({ theme, toggleTheme }) {
                 <div className="flex gap-3 items-center">
                     <button
                         onClick={toggleTheme}
-                        className="p-2 rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-yellow-400 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors mr-2"
+                        className="p-3 rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-yellow-400 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors mr-2"
                         aria-label="Toggle Theme"
                     >
                         {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
@@ -56,17 +56,19 @@ export default function Navbar({ theme, toggleTheme }) {
 
                     {isAuthenticated ? (
                         <>
-                            <Link to="/" className="btn btn-secondary hidden sm:inline-flex">
+                            <Link to="/" className="btn btn-secondary hidden md:inline-flex">
                                 Feed
                             </Link>
 
-                            {/* Notification Badge */}
-                            <NotificationBadge
-                                count={notificationCount}
-                                onClick={handleNotificationClick}
-                            />
+                            {/* Notification Badge - Hidden on mobile as it is in BottomNav */}
+                            <div className="hidden md:block">
+                                <NotificationBadge
+                                    count={notificationCount}
+                                    onClick={handleNotificationClick}
+                                />
+                            </div>
 
-                            <Link to="/create" className="btn btn-primary">
+                            <Link to="/create" className="btn btn-primary hidden md:inline-flex">
                                 New Post
                             </Link>
 
@@ -101,29 +103,6 @@ export default function Navbar({ theme, toggleTheme }) {
                                         >
                                             <User size={18} />
                                             <span>Profile</span>
-                                        </Link>
-
-                                        <Link
-                                            to="/follow-requests"
-                                            onClick={() => setShowDropdown(false)}
-                                            className="flex items-center gap-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-                                        >
-                                            <Heart size={18} />
-                                            <span>Incoming Requests</span>
-                                            {notificationCount > 0 && (
-                                                <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                                                    {notificationCount}
-                                                </span>
-                                            )}
-                                        </Link>
-
-                                        <Link
-                                            to="/sent-requests"
-                                            onClick={() => setShowDropdown(false)}
-                                            className="flex items-center gap-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-                                        >
-                                            <Send size={18} />
-                                            <span>Sent Requests</span>
                                         </Link>
 
                                         <hr className="my-2 border-gray-200 dark:border-slate-700" />

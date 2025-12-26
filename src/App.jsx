@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute, PublicOnlyRoute } from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
+import MainLayout from './layouts/MainLayout';
 import Feed from './pages/Feed';
 import CreatePost from './pages/CreatePost';
 import Login from './pages/Login';
@@ -35,101 +36,97 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <div className="min-h-screen">
-          <Navbar theme={theme} toggleTheme={toggleTheme} />
+        <MainLayout theme={theme} toggleTheme={toggleTheme}>
+          <Routes>
+            {/* Public Routes (Login/Signup) */}
+            <Route
+              path="/login"
+              element={
+                <PublicOnlyRoute>
+                  <Login />
+                </PublicOnlyRoute>
+              }
+            />
+            <Route
+              path="/signup"
+              element={
+                <PublicOnlyRoute>
+                  <Signup />
+                </PublicOnlyRoute>
+              }
+            />
 
-          <main className="container mx-auto px-4 pb-12">
-            <Routes>
-              {/* Public Routes (Login/Signup) */}
-              <Route
-                path="/login"
-                element={
-                  <PublicOnlyRoute>
-                    <Login />
-                  </PublicOnlyRoute>
-                }
-              />
-              <Route
-                path="/signup"
-                element={
-                  <PublicOnlyRoute>
-                    <Signup />
-                  </PublicOnlyRoute>
-                }
-              />
+            {/* OAuth Callback Route */}
+            <Route path="/auth/callback" element={<OAuthCallback />} />
 
-              {/* OAuth Callback Route */}
-              <Route path="/auth/callback" element={<OAuthCallback />} />
+            {/* Protected Routes (Require Authentication) */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Feed />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/create"
+              element={
+                <ProtectedRoute>
+                  <CreatePost />
+                </ProtectedRoute>
+              }
+            />
 
-              {/* Protected Routes (Require Authentication) */}
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <Feed />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/create"
-                element={
-                  <ProtectedRoute>
-                    <CreatePost />
-                  </ProtectedRoute>
-                }
-              />
+            {/* Profile Routes */}
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile/edit"
+              element={
+                <ProtectedRoute>
+                  <EditProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile/:username"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
 
-              {/* Profile Routes */}
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/profile/edit"
-                element={
-                  <ProtectedRoute>
-                    <EditProfile />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/profile/:username"
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                }
-              />
+            {/* Follow Requests Route */}
+            <Route
+              path="/follow-requests"
+              element={
+                <ProtectedRoute>
+                  <FollowRequests />
+                </ProtectedRoute>
+              }
+            />
 
-              {/* Follow Requests Route */}
-              <Route
-                path="/follow-requests"
-                element={
-                  <ProtectedRoute>
-                    <FollowRequests />
-                  </ProtectedRoute>
-                }
-              />
+            {/* Sent Requests Route */}
+            <Route
+              path="/sent-requests"
+              element={
+                <ProtectedRoute>
+                  <SentRequests />
+                </ProtectedRoute>
+              }
+            />
 
-              {/* Sent Requests Route */}
-              <Route
-                path="/sent-requests"
-                element={
-                  <ProtectedRoute>
-                    <SentRequests />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Catch-all: Redirect to home */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
-        </div>
+            {/* Catch-all: Redirect to home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </MainLayout>
       </AuthProvider>
     </BrowserRouter>
   );
