@@ -1,7 +1,6 @@
 {
     "buildCommand": "npm run build",
     "outputDirectory": "dist",
-    "ignoreCommand": "bash .vercel/ignored-build-step.sh",
     "rewrites": [
         {
             "source": "/api/auth/:path*",
