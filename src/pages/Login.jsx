@@ -19,6 +19,10 @@ export default function Login() {
     // Get the page user was trying to access before being redirected to login
     const from = location.state?.from?.pathname || '/';
 
+    // API base URL for OAuth (needs full URL, not relative path)
+    const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.MODE === 'development' ? 'http://localhost:3000/api' : '/api');
+
+
     const handleEmailChange = (e) => {
         const value = e.target.value;
         setEmail(value);
@@ -170,7 +174,7 @@ export default function Login() {
                         <div className="mt-6 grid grid-cols-2 gap-3">
                             <button
                                 type="button"
-                                onClick={() => window.location.href = '/api/auth/oauth/google'}
+                                onClick={() => window.location.href = `${API_BASE_URL}/auth/oauth/google`}
                                 className="w-full inline-flex justify-center py-3 px-4 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors"
                             >
                                 <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -181,7 +185,7 @@ export default function Login() {
 
                             <button
                                 type="button"
-                                onClick={() => window.location.href = '/api/auth/oauth/github'}
+                                onClick={() => window.location.href = `${API_BASE_URL}/auth/oauth/github`}
                                 className="w-full inline-flex justify-center py-3 px-4 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors"
                             >
                                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
