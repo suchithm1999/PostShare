@@ -118,9 +118,10 @@ app.put('/api/posts/:id', wrapHandler(postById));
 app.delete('/api/posts/:id', wrapHandler(postById));
 
 // Start server
-app.listen(PORT, () => {
-    console.log(`🚀 API server running on http://localhost:${PORT}`);
-    console.log(`📝 Auth endpoints available at http://localhost:${PORT}/api/auth/*`);
-    console.log(`👤 User endpoints available at http://localhost:${PORT}/api/users/*`);
-    console.log(`📮 Posts endpoints available at http://localhost:${PORT}/api/posts/*`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 API server running on http://0.0.0.0:${PORT}`);
+    console.log(`📝 Auth endpoints available at /api/auth/*`);
+    console.log(`👤 User endpoints available at /api/users/*`);
+    console.log(`📮 Posts endpoints available at /api/posts/*`);
+    console.log(`🏥 Health check available at /api/health`);
 });
