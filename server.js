@@ -44,6 +44,9 @@ import getPosts from './api/posts/index.js';
 import createPost from './api/posts/create.js';
 import postById from './api/posts/[id].js';
 
+// Health check
+import healthCheck from './api/health.js';
+
 // Wrapper to convert Vercel serverless functions to Express handlers
 const wrapHandler = (handler) => async (req, res) => {
     try {
@@ -51,6 +54,9 @@ const wrapHandler = (handler) => async (req, res) => {
     } catch (error) {
         console.error('API Error:', error);
         res.status(500).json({ error: 'Internal server error' });
+
+// Health check route (for monitoring)
+app.get('/api/health', wrapHandler(healthCheck));
     }
 };
 
