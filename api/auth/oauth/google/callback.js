@@ -42,7 +42,7 @@ export default async function handler(req, res) {
         } = process.env;
 
         // Frontend URL for redirect after OAuth
-        const FRONTEND_URL = process.env.VITE_APP_URL || 'http://localhost:5174';
+        const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5174';
 
         if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
             return sendError(res, Errors.internal('Google OAuth not configured'));
@@ -58,7 +58,7 @@ export default async function handler(req, res) {
                 code,
                 client_id: GOOGLE_CLIENT_ID,
                 client_secret: GOOGLE_CLIENT_SECRET,
-                redirect_uri: 'http://localhost:3000/api/auth/oauth/google/callback',
+                redirect_uri: process.env.OAUTH_REDIRECT_URI || 'http://localhost:3000/api/auth/oauth/google/callback',
                 grant_type: 'authorization_code',
             }),
         });
@@ -179,7 +179,7 @@ export default async function handler(req, res) {
         console.error('Google OAuth callback error:', error);
 
         // Redirect to frontend with error
-        const frontendUrl = process.env.VITE_APP_URL || 'http://localhost:5174';
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5174';
         const redirectUrl = new URL(frontendUrl);
         redirectUrl.pathname = '/auth/callback';
         redirectUrl.searchParams.append('oauth_error', 'authentication_failed');
