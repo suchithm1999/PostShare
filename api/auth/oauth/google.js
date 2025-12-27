@@ -32,8 +32,9 @@ export default async function handler(req, res) {
         res.setHeader('Set-Cookie', `oauth_state=${state}; HttpOnly; SameSite=Lax; Path=/; Max-Age=600`);
 
         // Build Google OAuth URL
-        // Use localhost:3000 for API server, not Vite port
-        const redirectUri = 'http://localhost:3000/api/auth/oauth/google/callback';
+        // Use environment variable for redirect URI (production or localhost)
+        const redirectUri = process.env.OAUTH_REDIRECT_URI || 'http://localhost:3000/api/auth/oauth/google/callback';
+
         const scope = 'openid email profile';
 
         const googleAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
