@@ -33,14 +33,19 @@ services:
   # Frontend Static Site
   - type: web
     name: postshare-frontend
-    env: static
+    runtime: static
     region: oregon
     plan: free
     buildCommand: npm run build
     staticPublishPath: ./dist
+    pullRequestPreviewsEnabled: true
     envVars:
       - key: VITE_API_URL
-        value: https://postshare-api.onrender.com/api
+        value: https://postshare-api-mv98.onrender.com/api
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate
     routes:
       - type: rewrite
         source: /*
