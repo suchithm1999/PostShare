@@ -71,11 +71,12 @@ const wrapHandler = (handler) => async (req, res) => {
     } catch (error) {
         console.error('API Error:', error);
         res.status(500).json({ error: 'Internal server error' });
-
-        // Health check route (for monitoring)
-        app.get('/api/health', wrapHandler(healthCheck));
     }
 };
+
+
+// Health check route (for monitoring)
+app.get('/api/health', wrapHandler(healthCheck));
 
 // Auth routes
 app.post('/api/auth/signup', wrapHandler(signup));
