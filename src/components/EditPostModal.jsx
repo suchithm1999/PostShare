@@ -1,15 +1,30 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import PostForm from './PostForm';
 import { createPortal } from 'react-dom';
 
 export default function EditPostModal({ post, isOpen, onClose, onUpdate }) {
     const dialogRef = useRef(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Close on click outside
     const handleBackdropClick = (e) => {
         if (e.target === dialogRef.current) {
             onClose();
+        }
+    };
+
+    const handleSubmit = async (dto) => {
+        setIsSubmitting(true);
+        try {
+            await onUpdate(post._id, dto);
+            onClose();
+        } catch (error) {
+            console.error('Failed to update post:', error);
+            // Re-throw so parent can handle with toast
+            throw error;
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -27,7 +42,8 @@ export default function EditPostModal({ post, isOpen, onClose, onUpdate }) {
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Edit Post</h3>
                     <button
                         onClick={onClose}
-                        className="p-1 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                        disabled={isSubmitting}
+                        className="p-1 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <X size={20} />
                     </button>
@@ -36,12 +52,9 @@ export default function EditPostModal({ post, isOpen, onClose, onUpdate }) {
                 <div className="p-4">
                     <PostForm
                         initialValues={post}
-                        onSubmit={async (dto) => {
-                            await onUpdate(post.id, dto);
-                            onClose();
-                        }}
+                        onSubmit={handleSubmit}
                         onCancel={onClose}
-                        isSubmitting={false} // Feed handles async state usually, but for now simplistic
+                        isSubmitting={isSubmitting}
                     />
                 </div>
             </div>

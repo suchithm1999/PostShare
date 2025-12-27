@@ -1,0 +1,550 @@
+openapi: 3.0.3
+info:
+  title: PostShare Users API
+  description: API for user profiles, following/followers, and social features
+  version: 1.0.0
+  contact:
+    name: PostShare Team
+
+servers:
+  - url: https://{domain}/api
+    description: Vercel deployment
+    variables:
+      domain:
+        default: localhost:3000
+        description: Deployment domain
+  - url: http://localhost:3000/api
+    description: Local development
+
+tags:
+  - name: users
+    description: User profile operations
+  - name: following
+    description: Follow/unfollow operations
+
+paths:
+  /users/me:
+    get:
+      tags:
+        - users
+      summary: Get current user profile
+      description: Get the authenticated user's own profile
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    put:
+      tags:
+        - users
+      summary: Update current user profile
+      description: Update display name and/or bio (username is locked after creation)
+      operationId: updateProfile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                displayName:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                  example: "Jane Smith"
+                bio:
+                  type: string
+                  maxLength: 500
+                  nullable: true
+                  example: "Software engineer and blogger"
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /users/me/avatar:
+    post:
+      tags:
+        - users
+      summary: Upload profile picture
+      description: Upload or update profile picture (max 2MB, JPEG/PNG/WebP/GIF)
+      operationId: uploadAvatar
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Profile picture file (max 2MB)
+            encoding:
+              file:
+                contentType: image/jpeg, image/png, image/webp, image/gif
+      responses:
+        '200':
+          description: Avatar uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  avatarUrl:
+                    type: string
+                    format: uri
+                    example: "https://res.cloudinary.com/demo/image/upload/v1234567890/postshare/avatars/user123.jpg"
+                  avatarPublicId:
+                    type: string
+                    example: "postshare/avatars/user123"
+        '400':
+          description: Invalid file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidType:
+                  value:
+                    error: 'Invalid file type. Allowed: JPEG, PNG, WebP, GIF'
+                    code: 'INVALID_FILE_TYPE'
+                tooLarge:
+                  value:
+                    error: 'File too large. Maximum size: 2MB'
+                    code: 'FILE_TOO_LARGE'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /users/{username}:
+    get:
+      tags:
+        - users
+      summary: Get user profile by username
+      description: Get any user's public profile information
+      operationId: getUserByUsername
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[a-zA-Z0-9_-]{3,20}$"
+          example: "johndoe"
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: 'User not found'
+                code: 'USER_NOT_FOUND'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /users/{username}/follow:
+    post:
+      tags:
+        - following
+      summary: Follow a user
+      description: Follow a user (instant, no approval required). Idempotent - following twice does nothing.
+      operationId: followUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "janedoe"
+      responses:
+        '200':
+          description: Now following user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Now following janedoe"
+                  following:
+                    type: boolean
+                    example: true
+                  followingCount:
+                    type: integer
+                    description: Current user's updated following count
+                    example: 43
+        '400':
+          description: Cannot follow self
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: 'You cannot follow yourself'
+                code: 'CANNOT_FOLLOW_SELF'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: User to follow not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: 'User not found'
+                code: 'USER_NOT_FOUND'
+        '429':
+          description: Follow rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: 'Too many follow actions. Maximum 50 per hour.'
+                code: 'RATE_LIMIT_EXCEEDED'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    delete:
+      tags:
+        - following
+      summary: Unfollow a user
+      description: Stop following a user. Idempotent - unfollowing twice does nothing.
+      operationId: unfollowUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "janedoe"
+      responses:
+        '200':
+          description: Unfollowed user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Unfollowed janedoe"
+                  following:
+                    type: boolean
+                    example: false
+                  followingCount:
+                    type: integer
+                    description: Current user's updated following count
+                    example: 42
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: User to unfollow not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: 'User not found'
+                code: 'USER_NOT_FOUND'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /users/{username}/followers:
+    get:
+      tags:
+        - following
+      summary: Get user's followers
+      description: List all users following the specified user
+      operationId: getFollowers
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "johndoe"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Maximum number of followers to return
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Number of followers to skip (pagination)
+      responses:
+        '200':
+          description: List of followers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  followers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserSummary'
+                  total:
+                    type: integer
+                    description: Total follower count
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /users/{username}/following:
+    get:
+      tags:
+        - following
+      summary: Get users that this user follows
+      description: List all users that the specified user is following
+      operationId: getFollowing
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "johndoe"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Maximum number to return
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Number to skip (pagination)
+      responses:
+        '200':
+          description: List of users being followed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  following:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserSummary'
+                  total:
+                    type: integer
+                    description: Total following count
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+components:
+  schemas:
+    UserProfile:
+      type: object
+      required:
+        - _id
+        - email
+        - username
+        - displayName
+        - followerCount
+        - followingCount
+        - postCount
+        - createdAt
+      properties:
+        _id:
+          type: string
+          description: MongoDB ObjectId
+          example: "676c2f9a8e7b12a3c4d5e6f9"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        username:
+          type: string
+          pattern: "^[a-zA-Z0-9_-]{3,20}$"
+          example: "johndoe"
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: "John Doe"
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://res.cloudinary.com/demo/image/upload/v1234567890/postshare/avatars/user123.jpg"
+        bio:
+          type: string
+          maxLength: 500
+          nullable: true
+          example: "Software engineer and blogger"
+        followerCount:
+          type: integer
+          minimum: 0
+          example: 25
+        followingCount:
+          type: integer
+          minimum: 0
+          example: 42
+        postCount:
+          type: integer
+          minimum: 0
+          example: 15
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-12-25T09:00:00.000Z"
+        lastLoginAt:
+          type: string
+          format: date-time
+          example: "2025-12-25T18:30:00.000Z"
+
+    UserSummary:
+      type: object
+      required:
+        - _id
+        - username
+        - displayName
+      description: Lightweight user object for lists (followers, following)
+      properties:
+        _id:
+          type: string
+          example: "676c2f9a8e7b12a3c4d5e6f9"
+        username:
+          type: string
+          example: "johndoe"
+        displayName:
+          type: string
+          example: "John Doe"
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://res.cloudinary.com/demo/image/upload/v1234567890/postshare/avatars/user123.jpg"
+        followerCount:
+          type: integer
+          example: 25
+        followingCount:
+          type: integer
+          example: 42
+
+    Error:
+      type: object
+      required:
+        - error
+        - code
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+        code:
+          type: string
+          description: Machine-readable error code
+        details:
+          type: object
+          description: Additional error context (optional)
+
+  responses:
+    ValidationError:
+      description: Invalid request data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: 'Validation failed'
+            code: 'VALIDATION_ERROR'
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: 'Authentication required'
+            code: 'UNAUTHORIZED'
+
+    ServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: 'An unexpected error occurred'
+            code: 'INTERNAL_ERROR'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from authentication endpoints

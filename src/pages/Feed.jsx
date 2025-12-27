@@ -1,27 +1,38 @@
 import { useEffect, useState } from 'react';
+import { useLocation, Link } from 'react-router-dom';
 import PostCard from '../components/PostCard';
 import EditPostModal from '../components/EditPostModal';
 import ImageModal from '../components/ImageModal';
+import Toast from '../components/Toast';
 import { BlogService } from '../services/blogService';
-import { Loader2, Trash2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 
 export default function Feed() {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [editingPost, setEditingPost] = useState(null);
     const [viewingImage, setViewingImage] = useState(null);
+    const [toast, setToast] = useState(null);
+    const location = useLocation();
 
     useEffect(() => {
         loadPosts();
-    }, []);
+    }, [location]); // Reload when location changes (navigating back to feed)
 
     const loadPosts = async () => {
         try {
+            setError(null); // Clear previous errors
             const data = await BlogService.getAllPosts();
             setPosts(data);
         } catch (error) {
             console.error(error);
+            // Check if it's an authentication error
+            if (error.message?.includes('Session expired') || error.message?.includes('log in')) {
+                // Let the API client handle the redirect
+                return;
+            }
+            setError('Failed to load posts. Please try refreshing the page.');
         } finally {
             setLoading(false);
         }
@@ -35,22 +46,10 @@ export default function Feed() {
         );
     }
 
-    const handleClearFeed = async () => {
-        if (window.confirm('Are you sure you want to delete all posts? This cannot be undone.')) {
-            try {
-                await BlogService.clearAllPosts();
-                setPosts([]);
-            } catch (error) {
-                console.error("Failed to clear feed", error);
-                alert("Failed to clear feed. Please try again.");
-            }
-        }
-    };
-
     const handleDeletePost = async (id) => {
         try {
             await BlogService.deletePost(id);
-            setPosts(posts.filter(post => post.id !== id));
+            setPosts(posts.filter(post => post._id !== id));
         } catch (error) {
             console.error("Failed to delete post", error);
             alert("Failed to delete post. Please try again.");
@@ -64,10 +63,35 @@ export default function Feed() {
     const handleUpdatePost = async (id, dto) => {
         try {
             const updatedPost = await BlogService.updatePost(id, dto);
-            setPosts(posts.map(p => p.id === id ? updatedPost : p));
+            setPosts(posts.map(p => p._id === id ? updatedPost : p));
         } catch (error) {
             console.error("Failed to update post", error);
-            alert(error.message || "Failed to update post. Please try again.");
+
+            // Check if post was deleted (404 error)
+            if (error.message?.includes('not found') || error.status === 404) {
+                // Show toast notification
+                setToast({
+                    message: 'This post is no longer available',
+                    type: 'info'
+                });
+
+                // Close the edit modal
+                setEditingPost(null);
+
+                // Remove post from feed
+                setPosts(posts.filter(p => p._id !== id));
+
+                // Auto-refresh feed after brief delay
+                setTimeout(() => {
+                    loadPosts();
+                }, 1500);
+            } else {
+                // Show error for other failures
+                setToast({
+                    message: error.message || 'Failed to update post. Please try again.',
+                    type: 'error'
+                });
+            }
         }
     };
 
@@ -76,34 +100,41 @@ export default function Feed() {
     };
 
     return (
-        <div className="max-w-2xl mx-auto py-8 px-4">
-            <div className="flex justify-between items-center mb-8">
+        <div className="max-w-2xl mx-auto py-4 md:py-8 px-0 md:px-4">
+            <div className="flex justify-between items-center mb-8 px-4 md:px-0">
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
                     Latest Posts
                 </h1>
-                {posts.length > 0 && (
-                    <button
-                        onClick={handleClearFeed}
-                        className="flex items-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 px-3 py-1.5 rounded-lg transition-colors text-sm font-medium"
-                    >
-                        <Trash2 size={16} />
-                        Clear Feed
-                    </button>
-                )}
             </div>
 
-            {posts.length === 0 ? (
+            {/* Error Message */}
+            {error && (
+                <div className="text-center p-8 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800 mb-6">
+                    <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
+                    <button
+                        onClick={() => {
+                            setLoading(true);
+                            loadPosts();
+                        }}
+                        className="btn btn-primary"
+                    >
+                        Try Again
+                    </button>
+                </div>
+            )}
+
+            {!error && posts.length === 0 ? (
                 <div className="text-center p-12 bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-gray-300 dark:border-slate-700 animate-fade-in shadow-sm">
                     <p className="text-gray-500 dark:text-gray-400 mb-6 text-lg">No posts yet, start your journey!</p>
                     <Link to="/create" className="btn btn-primary inline-flex">
                         Create your first post
                     </Link>
                 </div>
-            ) : (
-                <div className="space-y-6">
+            ) : !error ? (
+                <div className="space-y-2 md:space-y-6">
                     {posts.map((post) => (
                         <PostCard
-                            key={post.id}
+                            key={post._id}
                             post={post}
                             onDelete={handleDeletePost}
                             onEdit={handleEditPost}
@@ -111,7 +142,7 @@ export default function Feed() {
                         />
                     ))}
                 </div>
-            )}
+            ) : null}
 
             <EditPostModal
                 post={editingPost}
@@ -120,11 +151,20 @@ export default function Feed() {
                 onUpdate={handleUpdatePost}
             />
 
+
             <ImageModal
                 imageUrl={viewingImage}
                 isOpen={!!viewingImage}
                 onClose={() => setViewingImage(null)}
             />
+
+            {toast && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast(null)}
+                />
+            )}
         </div>
     );
 }
