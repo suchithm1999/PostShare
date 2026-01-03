@@ -42,7 +42,7 @@ export default function OAuthCallback() {
             // Fetch user profile from API to get complete data including avatarUrl
             const fetchUserProfile = async () => {
                 try {
-                    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+                    const API_BASE_URL = process.env.VITE_API_URL || 'http://localhost:3000/api';
                     const response = await fetch(`${API_BASE_URL}/users/me`, {
                         headers: {
                             'Authorization': `Bearer ${accessToken}`,
