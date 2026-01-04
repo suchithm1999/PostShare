@@ -103,7 +103,6 @@ app.delete('/api/users/me/sent-requests/:id', wrapHandler(cancelSentRequest));
 
 // Follow routes (must be before :username route to avoid conflicts)
 app.post('/api/users/:username/follow-request', wrapHandler(followRequest));
-app.post('/api/users/:username/follow', wrapHandler(userFollow));
 app.delete('/api/users/:username/follow', wrapHandler(userFollow));
 app.get('/api/users/:username/followers', wrapHandler(userFollowers));
 app.get('/api/users/:username/following', wrapHandler(userFollowing));

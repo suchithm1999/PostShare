@@ -5,9 +5,11 @@ import { followRateLimit } from '../../../lib/rateLimit.js';
 import { ObjectId } from 'mongodb';
 
 /**
- * POST /api/users/[username]/follow - Follow a user
  * DELETE /api/users/[username]/follow - Unfollow a user
  * Rate limited to 50 actions per hour per user
+ * 
+ * Note: Direct following is not supported via this endpoint.
+ * Use POST /api/users/[username]/follow-request to send a follow request instead.
  */
 export default async function handler(req, res) {
     try {
@@ -68,42 +70,7 @@ export default async function handler(req, res) {
 
         const followsCollection = await getCollection('follows');
 
-        // POST - Follow user
-        if (req.method === 'POST') {
-            // Check if already following
-            const existingFollow = await followsCollection.findOne({
-                followerId: currentUserId,
-                followingId: targetUserId,
-            });
-
-            if (existingFollow) {
-                return sendError(res, Errors.validation('Already following this user'));
-            }
-
-            // Create follow relationship
-            await followsCollection.insertOne({
-                followerId: currentUserId,
-                followingId: targetUserId,
-                createdAt: new Date(),
-            });
-
-            // Update follower counts
-            await usersCollection.updateOne(
-                { _id: currentUserId },
-                { $inc: { followingCount: 1 } }
-            );
-            await usersCollection.updateOne(
-                { _id: targetUserId },
-                { $inc: { followerCount: 1 } }
-            );
-
-            return sendSuccess(res, {
-                message: `Now following ${targetUser.displayName}`,
-                following: true,
-            });
-        }
-
-        // DELETE - Unfollow user
+        // Only DELETE method is supported - Unfollow user
         if (req.method === 'DELETE') {
             // Check if following
             const existingFollow = await followsCollection.findOne({
@@ -137,8 +104,8 @@ export default async function handler(req, res) {
             });
         }
 
-        // Method not allowed
-        return sendError(res, Errors.badRequest('Method not allowed'));
+        // Method not allowed (only DELETE is supported)
+        return sendError(res, Errors.badRequest('Method not allowed. Use DELETE to unfollow, or POST /api/users/:username/follow-request to send a follow request.'));
 
     } catch (error) {
         console.error('Follow/unfollow error:', error);

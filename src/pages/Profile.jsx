@@ -10,6 +10,8 @@ import EditPostModal from '../components/EditPostModal';
 import ImageModal from '../components/ImageModal';
 import { BlogService } from '../services/blogService';
 import { Edit, Calendar, Users, Send } from 'lucide-react';
+import FollowersList from '../components/FollowersList';
+import FollowingList from '../components/FollowingList';
 
 /**
  * Profile Page
@@ -30,6 +32,10 @@ export default function Profile() {
     // Post actions state
     const [editingPost, setEditingPost] = useState(null);
     const [viewingImage, setViewingImage] = useState(null);
+
+    // Modal states
+    const [showFollowersModal, setShowFollowersModal] = useState(false);
+    const [showFollowingModal, setShowFollowingModal] = useState(false);
 
     // Determine if viewing own profile
     const isOwnProfile = !username || username === currentUser?.username;
@@ -228,7 +234,10 @@ export default function Profile() {
 
                             {/* Stats */}
                             <div className="flex flex-wrap justify-center sm:justify-start gap-6 text-sm">
-                                <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setShowFollowersModal(true)}
+                                    className="flex items-center gap-2 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
+                                >
                                     <Users size={18} className="text-gray-500 dark:text-gray-400" />
                                     <span className="text-gray-900 dark:text-white font-semibold">
                                         {profile.followerCount}
@@ -236,15 +245,18 @@ export default function Profile() {
                                     <span className="text-gray-600 dark:text-gray-400">
                                         followers
                                     </span>
-                                </div>
-                                <div className="flex items-center gap-2">
+                                </button>
+                                <button
+                                    onClick={() => setShowFollowingModal(true)}
+                                    className="flex items-center gap-2 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
+                                >
                                     <span className="text-gray-900 dark:text-white font-semibold">
                                         {profile.followingCount}
                                     </span>
                                     <span className="text-gray-600 dark:text-gray-400">
                                         following
                                     </span>
-                                </div>
+                                </button>
                                 <div className="flex items-center gap-2">
                                     <Calendar size={18} className="text-gray-500 dark:text-gray-400" />
                                     <span className="text-gray-600 dark:text-gray-400">
@@ -290,6 +302,20 @@ export default function Profile() {
                     imageUrl={viewingImage}
                     isOpen={!!viewingImage}
                     onClose={() => setViewingImage(null)}
+                />
+
+                {/* Followers Modal */}
+                <FollowersList
+                    isOpen={showFollowersModal}
+                    onClose={() => setShowFollowersModal(false)}
+                    username={profile.username}
+                />
+
+                {/* Following Modal */}
+                <FollowingList
+                    isOpen={showFollowingModal}
+                    onClose={() => setShowFollowingModal(false)}
+                    username={profile.username}
                 />
             </div>
         </div>

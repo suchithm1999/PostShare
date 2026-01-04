@@ -40,6 +40,7 @@ export default function UserAvatar({ src, alt = 'User avatar', size = 'md', clas
                 <img
                     src={src}
                     alt={alt}
+                    loading="lazy"
                     className="w-full h-full object-cover"
                     onError={(e) => {
                         // Fallback to icon if image fails to load
